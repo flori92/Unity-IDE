@@ -1,0 +1,31 @@
+{
+  "name": "@devops-unity/extension-sdk",
+  "version": "1.0.0",
+  "description": "SDK for building DevOps Unity IDE extensions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "devops-unity",
+    "extension",
+    "sdk",
+    "api"
+  ],
+  "author": "DevOps Unity Team",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "files": [
+    "dist",
+    "extension-api.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flori92/Unity-IDE.git"
+  }
+}

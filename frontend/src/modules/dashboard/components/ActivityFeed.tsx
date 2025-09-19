@@ -14,16 +14,12 @@ import {
   alpha,
 } from '@mui/material';
 import {
-  PlayArrow as PlayIcon,
-  Stop as StopIcon,
   Build as BuildIcon,
-  CloudUpload as DeployIcon,
   Error as ErrorIcon,
   CheckCircle as SuccessIcon,
   Warning as WarningIcon,
   Info as InfoIcon,
   Refresh as RefreshIcon,
-  FilterList as FilterIcon,
   Computer as DockerIcon,
   CloudQueue as K8sIcon,
   PlayCircleOutline as AnsibleIcon,
@@ -169,18 +165,6 @@ const ActivityFeed: React.FC = () => {
     }
   };
 
-  const getStatusColor = (status: Activity['status']) => {
-    switch (status) {
-      case 'success':
-        return 'success';
-      case 'error':
-        return 'error';
-      case 'warning':
-        return 'warning';
-      default:
-        return 'info';
-    }
-  };
 
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();

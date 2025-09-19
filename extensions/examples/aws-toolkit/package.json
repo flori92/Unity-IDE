@@ -1,0 +1,114 @@
+{
+  "name": "aws-toolkit",
+  "displayName": "AWS Toolkit",
+  "version": "2.1.0",
+  "description": "Complete AWS integration with EC2, S3, Lambda, CloudFormation, and more",
+  "publisher": "aws",
+  "icon": "icon.png",
+  "engines": {
+    "devopsUnity": "^1.0.0"
+  },
+  "categories": [
+    "Cloud",
+    "Deployment"
+  ],
+  "keywords": [
+    "aws",
+    "cloud",
+    "ec2",
+    "s3",
+    "lambda",
+    "cloudformation"
+  ],
+  "activationEvents": [
+    "onCommand:aws.connect",
+    "onCommand:aws.deploy",
+    "onView:awsExplorer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aws.connect",
+        "title": "Connect to AWS",
+        "category": "AWS"
+      },
+      {
+        "command": "aws.deploy",
+        "title": "Deploy to AWS",
+        "category": "AWS"
+      },
+      {
+        "command": "aws.s3.upload",
+        "title": "Upload to S3",
+        "category": "AWS"
+      },
+      {
+        "command": "aws.lambda.create",
+        "title": "Create Lambda Function",
+        "category": "AWS"
+      }
+    ],
+    "views": {
+      "explorer": [
+        {
+          "id": "awsExplorer",
+          "name": "AWS Explorer",
+          "icon": "$(cloud)"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AWS Toolkit",
+      "properties": {
+        "aws.profile": {
+          "type": "string",
+          "default": "default",
+          "description": "AWS profile to use"
+        },
+        "aws.region": {
+          "type": "string",
+          "default": "us-east-1",
+          "description": "Default AWS region"
+        },
+        "aws.credentials.path": {
+          "type": "string",
+          "default": "~/.aws/credentials",
+          "description": "Path to AWS credentials file"
+        }
+      }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "aws.s3.upload",
+          "when": "viewItem == s3bucket",
+          "group": "aws@1"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "aws.deploy",
+          "when": "resourceExtname == .yaml",
+          "group": "aws@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@devops-unity/extension-sdk": "^1.0.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-ec2": "^3.0.0",
+    "@aws-sdk/client-s3": "^3.0.0",
+    "@aws-sdk/client-lambda": "^3.0.0",
+    "@aws-sdk/client-cloudformation": "^3.0.0"
+  }
+}
