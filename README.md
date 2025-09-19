@@ -183,6 +183,39 @@ export default class MyExtension extends Extension {
 }
 ```
 
+---
+
+# Maquette visuelle du dashboard Unity DevOps IDE
+
+```
++---------------------------------------------------------------+
+| Header : Notifications | Recherche | Profil                   |
++-------------------+-------------------------------------------+
+| Sidebar           |   Dashboard principal                      |
+|-------------------|-------------------------------------------|
+| [Dashboard]       |  +-------------------------------------+  |
+| [Projets]         |  |  Statut des conteneurs Docker       |  |
+| [Docker]          |  +-------------------------------------+  |
+| [Kubernetes]      |  |  Statut des clusters Kubernetes     |  |
+| [Ansible]         |  +-------------------------------------+  |
+| [CI/CD]           |  |  Pipelines & Jobs                   |  |
+| [Monitoring]      |  +-------------------------------------+  |
+| [Extensions]      |  |  Logs & Alertes                      |
+| [Paramètres]      |  +-------------------------------------+  |
+|                   |  |  Graphiques ressources système      |  |
+|                   |  +-------------------------------------+  |
+|                   |  |  Terminal intégré                   |  |
+|                   |  +-------------------------------------+  |
++-------------------+-------------------------------------------+
+| Footer : Logs | État backend | Version | Accès terminal        |
++---------------------------------------------------------------+
+```
+
+---
+Ce schéma représente la structure cible : navigation latérale, header, modules interactifs, dashboard central, footer informatif.
+
+Pour une version graphique, il est possible d’utiliser Figma, Excalidraw ou un outil de wireframe.
+
 ## 📊 Comparaison avec la concurrence
 
 | Fonctionnalité | DevOps Unity | Docker Desktop | Lens | VS Code | Rancher |
@@ -239,3 +272,89 @@ Ce projet est sous licence MIT. Voir le fichier [LICENSE](./LICENSE) pour plus d
 ---
 
 **DevOps Unity IDE** - Transformez votre approche DevOps avec la première plateforme unifiée du marché.
+
+---
+
+## Fonctionnalités de base d’un IDE moderne
+
+1. **Édition de code**
+   - Editeur multi-langages avec coloration syntaxique
+   - Auto-complétion, suggestions intelligentes
+   - Refactoring, recherche/remplacement
+   - Gestion des erreurs et linting en temps réel
+
+2. **Navigation et gestion de projet**
+   - Explorateur de fichiers/dossiers
+   - Outils de recherche globale
+   - Gestion des espaces de travail et projets multiples
+
+3. **Terminal intégré**
+   - Accès shell direct dans l’IDE
+   - Exécution de commandes personnalisées
+
+4. **Débogage**
+   - Points d’arrêt, inspection de variables
+   - Console de logs et stack trace
+
+5. **Contrôle de version**
+   - Intégration Git (commit, push, pull, merge, historique)
+   - Visualisation des différences et conflits
+
+6. **Extensions et personnalisation**
+   - Marketplace d’extensions
+   - Thèmes, raccourcis clavier, widgets
+
+7. **Gestion des tâches et notifications**
+   - To-do, alertes, notifications système
+
+8. **Documentation et onboarding**
+   - Guides intégrés, aide contextuelle
+
+---
+Ces fonctionnalités sont la base à enrichir avec les modules DevOps pour une solution vraiment innovante.
+
+---
+
+## Modules DevOps avancés et révolutionnaires à intégrer
+
+1. **Gestion Docker & Kubernetes**
+   - Visualisation graphique des conteneurs, images, volumes, réseaux
+   - Actions rapides (start/stop/restart, logs, stats, shell)
+   - Monitoring des clusters, déploiements, services, pods
+   - Déploiement et rollback automatisés
+
+2. **CI/CD intégré**
+   - Visualisation et gestion des pipelines
+   - Déclenchement manuel ou automatique des jobs
+   - Logs de build, artefacts, notifications d’état
+   - Intégration avec GitHub Actions, GitLab CI, Jenkins…
+
+3. **Monitoring & Alerting**
+   - Graphiques temps réel (CPU, RAM, réseau, stockage)
+   - Alertes personnalisables, notifications système
+   - Historique des métriques et logs
+
+4. **Gestion Cloud**
+   - Intégration multi-cloud (AWS, Azure, GCP, OVH…)
+   - Provisionnement et gestion des ressources cloud
+   - Suivi des coûts et optimisation
+
+5. **Automatisation & Infrastructure as Code**
+   - Exécution de playbooks Ansible, scripts Terraform
+   - Gestion des inventaires, variables, secrets
+   - Génération et validation de templates IaC
+
+6. **Extensions & Marketplace**
+   - Installation d’outils tiers (monitoring, sécurité, productivité…)
+   - API pour développer ses propres modules
+
+7. **Collaboration & Productivité**
+   - Chat intégré, partage de sessions, pair programming
+   - Gestion des tâches, tickets, documentation collaborative
+
+8. **Sécurité & Audit**
+   - Scan de vulnérabilités, gestion des accès et rôles
+   - Audit des actions et historique
+
+---
+Ces modules font de Unity DevOps IDE une solution unique, centralisant tout le cycle de vie DevOps dans une interface moderne et collaborative.

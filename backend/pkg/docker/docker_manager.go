@@ -1,21 +1,19 @@
 package docker
 
 import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"time"
-
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/api/types/image"
-	"github.com/docker/docker/client"
-	"github.com/sirupsen/logrus"
+ "context"
+ "encoding/json"
+ "fmt"
+ "io"
+ "time"
+ containerTypes "github.com/docker/docker/api/types/container"
+ imageTypes "github.com/docker/docker/api/types/image"
+ dockerclient "github.com/docker/docker/client"
+ "github.com/sirupsen/logrus"
 )
 
 type DockerManager struct {
-	client *client.Client
+	client *dockerclient.Client
 }
 
 type ContainerInfo struct {
@@ -54,7 +52,7 @@ type ContainerStats struct {
 }
 
 func NewDockerManager() (*DockerManager, error) {
-	client, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	client, err := dockerclient.NewClientWithOpts(dockerclient.FromEnv, dockerclient.WithAPIVersionNegotiation())
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Docker client: %w", err)
 	}
@@ -65,9 +63,9 @@ func NewDockerManager() (*DockerManager, error) {
 }
 
 func (dm *DockerManager) ListContainers() ([]ContainerInfo, error) {
-	containers, err := dm.client.ContainerList(context.Background(), container.ListOptions{
-		All: true,
-	})
+	 containers, err := dm.client.ContainerList(context.Background(), containerTypes.ListOptions{
+	 	All: true,
+	 })
 	if err != nil {
 		return nil, fmt.Errorf("failed to list containers: %w", err)
 	}
@@ -100,7 +98,7 @@ func (dm *DockerManager) ListContainers() ([]ContainerInfo, error) {
 }
 
 func (dm *DockerManager) StartContainer(containerID string) error {
-	err := dm.client.ContainerStart(context.Background(), containerID, container.StartOptions{})
+	 err := dm.client.ContainerStart(context.Background(), containerID, containerTypes.StartOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to start container %s: %w", containerID, err)
 	}
@@ -109,9 +107,9 @@ func (dm *DockerManager) StartContainer(containerID string) error {
 
 func (dm *DockerManager) StopContainer(containerID string) error {
 	timeout := int(30)
-	err := dm.client.ContainerStop(context.Background(), containerID, container.StopOptions{
-		Timeout: &timeout,
-	})
+	 err := dm.client.ContainerStop(context.Background(), containerID, containerTypes.StopOptions{
+	 	Timeout: &timeout,
+	 })
 	if err != nil {
 		return fmt.Errorf("failed to stop container %s: %w", containerID, err)
 	}
@@ -119,9 +117,9 @@ func (dm *DockerManager) StopContainer(containerID string) error {
 }
 
 func (dm *DockerManager) RemoveContainer(containerID string) error {
-	err := dm.client.ContainerRemove(context.Background(), containerID, container.RemoveOptions{
-		Force: true,
-	})
+	 err := dm.client.ContainerRemove(context.Background(), containerID, containerTypes.RemoveOptions{
+	 	Force: true,
+	 })
 	if err != nil {
 		return fmt.Errorf("failed to remove container %s: %w", containerID, err)
 	}
@@ -129,7 +127,7 @@ func (dm *DockerManager) RemoveContainer(containerID string) error {
 }
 
 func (dm *DockerManager) ListImages() ([]ImageInfo, error) {
-	images, err := dm.client.ImageList(context.Background(), image.ListOptions{})
+	 images, err := dm.client.ImageList(context.Background(), imageTypes.ListOptions{All: true})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list images: %w", err)
 	}
@@ -150,7 +148,7 @@ func (dm *DockerManager) ListImages() ([]ImageInfo, error) {
 }
 
 func (dm *DockerManager) PullImage(imageName string) error {
-	reader, err := dm.client.ImagePull(context.Background(), imageName, image.PullOptions{})
+	 reader, err := dm.client.ImagePull(context.Background(), imageName, imageTypes.PullOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to pull image %s: %w", imageName, err)
 	}
@@ -173,10 +171,10 @@ func (dm *DockerManager) GetContainerStats(containerID string) (*ContainerStats,
 	}
 	defer stats.Body.Close()
 
-	var v types.Stats
-	if err := json.NewDecoder(stats.Body).Decode(&v); err != nil {
-		return nil, fmt.Errorf("failed to decode stats: %w", err)
-	}
+	 var v containerTypes.StatsResponse
+	 if err := json.NewDecoder(stats.Body).Decode(&v); err != nil {
+		 return nil, fmt.Errorf("failed to decode stats: %w", err)
+	 }
 
 	// Calculate CPU usage percentage
 	var cpuPercent float64
@@ -188,19 +186,19 @@ func (dm *DockerManager) GetContainerStats(containerID string) (*ContainerStats,
 		}
 	}
 
-	return &ContainerStats{
-		CPUUsage:    cpuPercent,
-		MemoryUsage: v.MemoryStats.Usage,
-		MemoryLimit: v.MemoryStats.Limit,
-		NetworkRx:   v.Networks["eth0"].RxBytes,
-		NetworkTx:   v.Networks["eth0"].TxBytes,
-		BlockRead:   v.BlkioStats.IoServiceBytesRecursive[0].Value,
-		BlockWrite:  v.BlkioStats.IoServiceBytesRecursive[1].Value,
-	}, nil
+	 return &ContainerStats{
+	 CPUUsage:    cpuPercent,
+	 MemoryUsage: int64(v.MemoryStats.Usage),
+	 MemoryLimit: int64(v.MemoryStats.Limit),
+	 NetworkRx:   int64(v.Networks["eth0"].RxBytes),
+	 NetworkTx:   int64(v.Networks["eth0"].TxBytes),
+	 BlockRead:   int64(v.BlkioStats.IoServiceBytesRecursive[0].Value),
+	 BlockWrite:  int64(v.BlkioStats.IoServiceBytesRecursive[1].Value),
+	 }, nil
 }
 
 func (dm *DockerManager) GetContainerLogs(containerID string, tail int) ([]string, error) {
-	reader, err := dm.client.ContainerLogs(context.Background(), containerID, container.LogsOptions{
+	reader, err := dm.client.ContainerLogs(context.Background(), containerID, containerTypes.LogsOptions{
 		ShowStdout: true,
 		ShowStderr: true,
 		Tail:       fmt.Sprintf("%d", tail),
@@ -211,20 +209,19 @@ func (dm *DockerManager) GetContainerLogs(containerID string, tail int) ([]strin
 	}
 	defer reader.Close()
 
-	var logs []string
-	buf := make([]byte, 1024)
-	for {
-		n, err := reader.Read(buf)
-		if err == io.EOF {
-			break
+		var logs []string
+		buf := make([]byte, 1024)
+		for {
+			n, err := reader.Read(buf)
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return nil, fmt.Errorf("failed to read logs: %w", err)
+			}
+			logs = append(logs, string(buf[:n]))
 		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to read logs: %w", err)
-		}
-		logs = append(logs, string(buf[:n]))
-	}
-
-	return logs, nil
+		return logs, nil
 }
 
 func (dm *DockerManager) IsConnected() bool {

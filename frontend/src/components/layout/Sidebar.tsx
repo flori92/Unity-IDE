@@ -29,6 +29,7 @@ import {
   ExpandLess,
   ExpandMore,
   FiberManualRecord as StatusIcon,
+  CheckCircleOutline as TodoIcon,
 } from '@mui/icons-material';
 
 interface SidebarProps {
@@ -52,6 +53,12 @@ const menuItems: MenuItem[] = [
     title: 'Dashboard',
     icon: <DashboardIcon />,
     path: '/dashboard',
+  },
+  {
+    id: 'todo',
+    title: 'Todo List',
+    icon: <TodoIcon />,
+    path: '/todo',
   },
   {
     id: 'docker',
