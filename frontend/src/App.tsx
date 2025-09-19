@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
@@ -197,21 +197,19 @@ function App() {
           }}
         >
           <Router>
-            <MainLayout>
-              <Routes>
-                <Route path="/" element={<Navigate to="/dashboard" replace />} />
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/ai-assistant" element={<AIAssistant />} />
-                <Route path="/security" element={<SecurityHub />} />
-                <Route path="/cloud" element={<MultiCloudManager />} />
-                <Route path="/observability" element={<ObservabilitySuite />} />
-                <Route path="/cicd" element={<PipelineDesigner />} />
-                <Route path="/gitops" element={<GitOpsManager />} />
-                <Route path="/iac" element={<IaCEditor />} />
-                <Route path="/cost" element={<CostOptimizer />} />
-                <Route path="/chaos" element={<ChaosEngineering />} />
-              </Routes>
-            </MainLayout>
+            <Routes>
+              <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
+              <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+              <Route path="/ai-assistant" element={<MainLayout><AIAssistant /></MainLayout>} />
+              <Route path="/security" element={<MainLayout><SecurityHub /></MainLayout>} />
+              <Route path="/cloud" element={<MainLayout><MultiCloudManager /></MainLayout>} />
+              <Route path="/observability" element={<MainLayout><ObservabilitySuite /></MainLayout>} />
+              <Route path="/cicd" element={<MainLayout><PipelineDesigner /></MainLayout>} />
+              <Route path="/gitops" element={<MainLayout><GitOpsManager /></MainLayout>} />
+              <Route path="/iac" element={<MainLayout><IaCEditor /></MainLayout>} />
+              <Route path="/cost" element={<MainLayout><CostOptimizer /></MainLayout>} />
+              <Route path="/chaos" element={<MainLayout><ChaosEngineering /></MainLayout>} />
+            </Routes>
           </Router>
         </SnackbarProvider>
         <ReactQueryDevtools initialIsOpen={false} />
