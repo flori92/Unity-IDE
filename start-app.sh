@@ -49,6 +49,38 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
+# Utilities
+ensure_nginx_proxy() {
+  if ! command -v docker &> /dev/null; then
+    echo -e "${YELLOW}Docker n'est pas installé ou indisponible. Le proxy Nginx ne sera pas démarré.${NC}"
+    return
+  fi
+
+  # Réseau dédié
+  if ! docker network ls --format '{{.Name}}' | grep -q '^unity-proxy-net$'; then
+    docker network create unity-proxy-net >/dev/null 2>&1 || true
+  fi
+
+  # Dossier de configuration utilisé par le backend (proxy_manager.go)
+  PROXY_CONF_DIR="$(pwd)/backend/data/proxy/nginx/conf.d"
+  mkdir -p "$PROXY_CONF_DIR"
+
+  # Démarrage du conteneur nginx-proxy si absent
+  if ! docker ps -a --format '{{.Names}}' | grep -q '^nginx-proxy$'; then
+    echo -e "${YELLOW}Démarrage du conteneur nginx-proxy...${NC}"
+    docker run -d \
+      --name nginx-proxy \
+      --restart unless-stopped \
+      --network unity-proxy-net \
+      -p 80:80 \
+      -v "$PROXY_CONF_DIR":/etc/nginx/conf.d \
+      nginx:alpine >/dev/null 2>&1 || true
+  else
+    # S'assurer qu'il est en cours d'exécution
+    docker start nginx-proxy >/dev/null 2>&1 || true
+  fi
+}
+
 # Step 1: Build and start the backend
 echo -e "\n${YELLOW}Step 1: Building backend...${NC}"
 cd backend
@@ -59,8 +91,8 @@ go get github.com/gorilla/mux
 go get github.com/gorilla/websocket
 go get github.com/rs/cors
 
-# Build the backend
-go build -o devops-backend local-server.go
+# Build the backend (inclure tous les fichiers .go)
+go build -o devops-backend .
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Failed to build backend${NC}"
@@ -69,8 +101,14 @@ fi
 
 echo -e "${GREEN}✓ Backend built successfully${NC}"
 
+# Start the proxy nginx (docker)
+echo -e "${YELLOW}Ensuring nginx-proxy container is running...${NC}"
+cd ..
+ensure_nginx_proxy
+
 # Start the backend
 echo -e "${YELLOW}Starting backend server...${NC}"
+cd backend
 ./devops-backend &
 BACKEND_PID=$!
 

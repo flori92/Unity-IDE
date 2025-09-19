@@ -19,6 +19,7 @@ import GitOpsManager from './modules/gitops/GitOpsManager';
 import IaCEditor from './modules/iac/IaCEditor';
 import CostOptimizer from './modules/cost/CostOptimizer';
 import ChaosEngineering from './modules/chaos/ChaosEngineering';
+import ProxyManager from './modules/proxy/ProxyManager';
 
 // Stores
 import { useThemeStore } from './store/themeStore';
@@ -200,6 +201,7 @@ function App() {
             <Routes>
               <Route path="/" element={<MainLayout><Dashboard /></MainLayout>} />
               <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+              <Route path="/proxy" element={<MainLayout><ProxyManager /></MainLayout>} />
               <Route path="/ai-assistant" element={<MainLayout><AIAssistant /></MainLayout>} />
               <Route path="/security" element={<MainLayout><SecurityHub /></MainLayout>} />
               <Route path="/cloud" element={<MainLayout><MultiCloudManager /></MainLayout>} />

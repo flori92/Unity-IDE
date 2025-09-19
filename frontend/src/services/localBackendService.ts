@@ -49,6 +49,25 @@ export interface Pod {
   node: string;
 }
 
+// Proxy (Nginx) types
+export interface ProxyStatus {
+  dockerAvailable: boolean;
+  containerExists: boolean;
+  containerRunning: boolean;
+  containerName: string;
+  image: string;
+  lastReload?: string;
+  hostsCount: number;
+}
+
+export interface ProxyHost {
+  id: string;
+  serverName: string;
+  targetUrl: string;
+  sslMode: 'none' | 'letsencrypt' | 'custom';
+  enabled: boolean;
+}
+
 export interface MetricsData {
   timestamp: Date;
   cpu: number;
@@ -342,6 +361,72 @@ class LocalBackendService {
       age: this.calculateAge(item.metadata?.creationTimestamp),
       node: item.spec?.nodeName || 'unknown',
     }));
+  }
+
+  // Proxy (Nginx) Methods
+
+  /**
+   * Get proxy status
+   */
+  async getProxyStatus(): Promise<ProxyStatus> {
+    const res = await fetch(`${API_BASE_URL}/proxy/status`);
+    if (!res.ok) throw new Error('Failed to get proxy status');
+    return res.json();
+  }
+
+  /**
+   * List proxy hosts
+   */
+  async getProxyHosts(): Promise<ProxyHost[]> {
+    const res = await fetch(`${API_BASE_URL}/proxy/hosts`);
+    if (!res.ok) throw new Error('Failed to get proxy hosts');
+    return res.json();
+  }
+
+  /** Create a proxy host */
+  async createProxyHost(host: Omit<ProxyHost, 'id'> & { id?: string }): Promise<ProxyHost> {
+    const res = await fetch(`${API_BASE_URL}/proxy/hosts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(host),
+    });
+    if (!res.ok) throw new Error('Failed to create proxy host');
+    return res.json();
+  }
+
+  /** Update a proxy host */
+  async updateProxyHost(id: string, host: Partial<ProxyHost>): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/proxy/hosts/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(host),
+    });
+    if (!res.ok) throw new Error('Failed to update proxy host');
+  }
+
+  /** Delete a proxy host */
+  async deleteProxyHost(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/proxy/hosts/${id}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('Failed to delete proxy host');
+  }
+
+  /** Apply configs (generate and reload) */
+  async applyProxyConfig(): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/proxy/apply`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to apply proxy config');
+  }
+
+  /** Hot reload nginx */
+  async reloadProxy(): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/proxy/reload`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to reload proxy');
+  }
+
+  /** Get proxy logs */
+  async getProxyLogs(): Promise<string> {
+    const res = await fetch(`${API_BASE_URL}/proxy/logs`);
+    if (!res.ok) throw new Error('Failed to get proxy logs');
+    return res.text();
   }
 
   private calculateAge(timestamp: string): string {

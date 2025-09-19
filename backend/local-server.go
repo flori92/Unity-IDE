@@ -139,6 +139,10 @@ func (lb *LocalBackend) setupRoutes() {
 	// Metrics endpoints
 	lb.router.HandleFunc("/api/metrics/system", lb.getSystemMetrics).Methods("GET")
 	lb.router.HandleFunc("/api/metrics/containers", lb.getContainerMetrics).Methods("GET")
+
+	// Proxy (Nginx) endpoints
+	pm := NewProxyManager()
+	pm.registerRoutes(lb)
 	
 	// WebSocket for real-time updates
 	lb.router.HandleFunc("/ws", lb.handleWebSocket)

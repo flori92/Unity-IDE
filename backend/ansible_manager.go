@@ -9,8 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-
-	"github.com/gorilla/mux"
+	"time"
 )
 
 // AnsibleManager handles all Ansible operations
@@ -109,8 +108,8 @@ func (am *AnsibleManager) ListPlaybooks() ([]Playbook, error) {
 				Path: filepath.Join(am.PlaybooksPath, file.Name()),
 			}
 			
-			// Read playbook content to extract metadata
-			content, _ := ioutil.ReadFile(playbook.Path)
+			// Read playbook content to extract metadata (ignored for now)
+            _, _ = ioutil.ReadFile(playbook.Path)
 			// Parse YAML to extract description, tags, etc.
 			// For now, we'll use the filename as description
 			playbook.Description = fmt.Sprintf("Playbook: %s", file.Name())

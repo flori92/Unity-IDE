@@ -67,6 +67,12 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    id: 'proxy',
+    title: 'Proxy',
+    icon: <KubernetesIcon />, // temporary icon; replace with Nginx icon if available
+    path: '/proxy',
+  },
+  {
     id: 'kubernetes',
     title: 'Kubernetes',
     icon: <KubernetesIcon />,
