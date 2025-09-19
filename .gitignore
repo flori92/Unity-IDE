@@ -1,0 +1,147 @@
+# Dependencies
+node_modules/
+vendor/
+target/
+
+# Build outputs
+dist/
+build/
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+*.dmg
+*.pkg
+*.deb
+*.rpm
+*.AppImage
+
+# Frontend
+frontend/dist/
+frontend/build/
+frontend/.parcel-cache/
+frontend/.cache/
+frontend/.next/
+frontend/out/
+
+# Tauri
+frontend/src-tauri/target/
+frontend/src-tauri/WixTools/
+
+# Backend Go
+backend/bin/
+backend/*.exe
+backend/*.test
+backend/*.out
+backend/vendor/
+backend/go.sum
+
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pnpm-debug.log*
+
+# Testing
+coverage/
+*.lcov
+.nyc_output/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+venv/
+env/
+
+# Documentation
+docs/_build/
+docs/.doctrees/
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+.secrets/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+
+# Ansible
+*.retry
+ansible/vault_pass.txt
+.ansible/
+
+# Extensions
+extensions/node_modules/
+extensions/dist/
+extensions/marketplace/cache/
+
+# User configuration
+config/local.yaml
+config/development.yaml
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Cache
+.cache/
+.parcel-cache/
+.sass-cache/
+
+# Lock files (optional - you may want to keep these)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
