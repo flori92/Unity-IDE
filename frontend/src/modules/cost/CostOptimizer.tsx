@@ -14,13 +14,9 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  ListItemSecondaryAction,
   Avatar,
-  LinearProgress,
   Alert,
   AlertTitle,
-  IconButton,
-  Tooltip,
   useTheme,
   alpha,
 } from '@mui/material';
@@ -39,7 +35,7 @@ import {
   Schedule as ScheduleIcon,
   TrendingUp as IncreaseIcon,
 } from '@mui/icons-material';
-import { PieChart, Pie, Cell, LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer, Area, AreaChart, Treemap } from 'recharts';
+import { PieChart, Pie, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as ChartTooltip, ResponsiveContainer } from 'recharts';
 
 interface CostRecommendation {
   id: string;
@@ -67,7 +63,6 @@ interface ResourceCost {
 const CostOptimizer: React.FC = () => {
   const theme = useTheme();
   const [activeTab, setActiveTab] = useState(0);
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
 
   const recommendations: CostRecommendation[] = [
     {
