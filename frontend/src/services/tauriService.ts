@@ -153,7 +153,7 @@ class TauriServiceClass {
     }
   }
 
-  // Event Listeners
+  // Event Management
   async listen(event: string, handler: (event: Event<any>) => void): Promise<void> {
     if (this.listeners.has(event)) {
       const unlisten = this.listeners.get(event);
@@ -232,6 +232,62 @@ class TauriServiceClass {
 
   async getCacheDir(): Promise<string> {
     return await cacheDir();
+  }
+
+  // Additional methods for extension runtime
+  async applyFileEdits(path: string, edits: any[]): Promise<void> {
+    try {
+      await invoke('apply_file_edits', { path, edits });
+    } catch (error) {
+      console.error('Failed to apply file edits:', error);
+      throw error;
+    }
+  }
+
+  async dockerExec(containerId: string, command: string[]): Promise<string> {
+    try {
+      return await invoke<string>('docker_exec', { containerId, command });
+    } catch (error) {
+      console.error('Failed to execute Docker command:', error);
+      throw error;
+    }
+  }
+
+  async applyK8sManifest(yaml: string): Promise<void> {
+    try {
+      await invoke('apply_k8s_manifest', { yaml });
+    } catch (error) {
+      console.error('Failed to apply K8s manifest:', error);
+      throw error;
+    }
+  }
+
+  async deleteK8sResource(kind: string, name: string, namespace: string): Promise<void> {
+    try {
+      await invoke('delete_k8s_resource', { kind, name, namespace });
+    } catch (error) {
+      console.error('Failed to delete K8s resource:', error);
+      throw error;
+    }
+  }
+
+  async validateAnsiblePlaybook(playbook: string): Promise<{ valid: boolean; errors: string[] }> {
+    try {
+      const result = await invoke<string>('validate_ansible_playbook', { playbook });
+      return JSON.parse(result);
+    } catch (error) {
+      console.error('Failed to validate Ansible playbook:', error);
+      throw error;
+    }
+  }
+
+  async encryptAnsibleVault(content: string, password: string): Promise<string> {
+    try {
+      return await invoke<string>('encrypt_ansible_vault', { content, password });
+    } catch (error) {
+      console.error('Failed to encrypt Ansible vault:', error);
+      throw error;
+    }
   }
 }
 

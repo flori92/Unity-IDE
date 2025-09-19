@@ -9,9 +9,55 @@ import { TauriService } from './tauriService';
 export class ExtensionRuntime {
   private loadedExtensions: Map<string, ExtensionInstance> = new Map();
   private extensionAPI: ExtensionAPI;
+  private commandRegistry: Map<string, (...args: any[]) => any> = new Map();
+  private configurationListeners: Array<(e: any) => void> = [];
+  private workspaceConfig: Map<string, any> = new Map();
 
   constructor() {
     this.extensionAPI = this.createExtensionAPI();
+  }
+
+  /**
+   * Notify configuration change listeners
+   */
+  private notifyConfigurationChange(section: string) {
+    const event = {
+      affectsConfiguration: (s: string) => s === section || s.startsWith(`${section}.`)
+    };
+    for (const listener of this.configurationListeners) {
+      try {
+        listener(event);
+      } catch (error) {
+        console.error('Error notifying configuration change:', error);
+      }
+    }
+  }
+
+  /**
+   * Get language ID from file extension
+   */
+  private getLanguageId(uri: string): string {
+    const ext = uri.split('.').pop()?.toLowerCase();
+    const languageMap: Record<string, string> = {
+      'js': 'javascript',
+      'jsx': 'javascriptreact',
+      'ts': 'typescript', 
+      'tsx': 'typescriptreact',
+      'py': 'python',
+      'yml': 'yaml',
+      'yaml': 'yaml',
+      'json': 'json',
+      'md': 'markdown',
+      'rs': 'rust',
+      'go': 'go',
+      'cpp': 'cpp',
+      'c': 'c',
+      'java': 'java',
+      'sh': 'shellscript',
+      'bash': 'shellscript',
+      'dockerfile': 'dockerfile',
+    };
+    return languageMap[ext || ''] || 'plaintext';
   }
 
   /**
@@ -72,7 +118,13 @@ export class ExtensionRuntime {
    * Execute an extension command
    */
   async executeCommand(command: string, ...args: any[]): Promise<any> {
-    // Find which extension provides this command
+    // Check central command registry first
+    if (this.commandRegistry.has(command)) {
+      const handler = this.commandRegistry.get(command)!;
+      return await handler(...args);
+    }
+    
+    // Then check extension-specific commands
     for (const [, instance] of this.loadedExtensions) {
       if (instance.commands.has(command)) {
         const handler = instance.commands.get(command);
@@ -91,25 +143,67 @@ export class ExtensionRuntime {
   private createExtensionAPI(): ExtensionAPI {
     return {
       workspace: {
-        getConfiguration: (_section?: string) => {
+        getConfiguration: (section?: string) => {
           // Return configuration from store
-          // TODO: Implement configuration retrieval using section parameter
+          if (section) {
+            const config = this.workspaceConfig.get(section) || {};
+            return {
+              get: (key: string, defaultValue?: any) => {
+                return config[key] !== undefined ? config[key] : defaultValue;
+              },
+              has: (key: string) => config[key] !== undefined,
+              update: async (key: string, value: any) => {
+                config[key] = value;
+                this.workspaceConfig.set(section, config);
+                // Notify listeners
+                this.notifyConfigurationChange(section);
+              },
+            };
+          }
           return {} as any;
         },
-        onDidChangeConfiguration: (_listener: (e: any) => void) => {
+        onDidChangeConfiguration: (listener: (e: any) => void) => {
           // Register configuration change listener
-          // TODO: Implement listener registration
-          return { dispose: () => {} };
+          this.configurationListeners.push(listener);
+          return { 
+            dispose: () => {
+              const index = this.configurationListeners.indexOf(listener);
+              if (index > -1) {
+                this.configurationListeners.splice(index, 1);
+              }
+            }
+          };
         },
-        openTextDocument: async (_uri: string) => {
+        openTextDocument: async (uri: string) => {
           // Open document via Tauri
-          // TODO: Implement document opening using uri
-          return {} as any;
+          try {
+            const content = await TauriService.readFile(uri);
+            return {
+              uri,
+              fileName: uri.split('/').pop() || '',
+              languageId: this.getLanguageId(uri),
+              version: 1,
+              getText: () => content,
+              lineCount: content.split('\n').length,
+            };
+          } catch (error) {
+            console.error('Failed to open document:', error);
+            throw error;
+          }
         },
-        applyEdit: async (_edit: any) => {
+        applyEdit: async (edit: any) => {
           // Apply workspace edit
-          // TODO: Implement edit application
-          return true;
+          try {
+            if (edit.changes) {
+              for (const [uri, edits] of Object.entries(edit.changes)) {
+                await TauriService.applyFileEdits(uri, edits as any);
+              }
+            }
+            return true;
+          } catch (error) {
+            console.error('Failed to apply edit:', error);
+            return false;
+          }
         },
       },
       window: {
@@ -153,10 +247,16 @@ export class ExtensionRuntime {
         },
       },
       commands: {
-        registerCommand: (_command: string, _callback: (...args: any[]) => any) => {
+        registerCommand: (command: string, callback: (...args: any[]) => any) => {
           // Register command handler
-          // TODO: Implement command registration
-          return { dispose: () => {} };
+          this.commandRegistry.set(command, callback);
+          console.log(`Registered command: ${command}`);
+          return { 
+            dispose: () => {
+              this.commandRegistry.delete(command);
+              console.log(`Unregistered command: ${command}`);
+            }
+          };
         },
         executeCommand: async (command: string, ...args: any[]) => {
           return await this.executeCommand(command, ...args);
@@ -182,39 +282,64 @@ export class ExtensionRuntime {
           // Stop container via Tauri
           console.log(`Stopping container ${id}`);
         },
-        executeCommand: async (_containerId: string, _command: string[]) => {
+        executeCommand: async (containerId: string, command: string[]) => {
           // Execute command in container
-          // TODO: Implement Docker command execution
-          return 'command output';
+          try {
+            const result = await TauriService.dockerExec(containerId, command);
+            return result;
+          } catch (error) {
+            console.error('Docker exec failed:', error);
+            return `Error: ${error}`;
+          }
         },
       },
       kubernetes: {
         listPods: async (namespace?: string) => {
           return await TauriService.getK8sPods(namespace);
         },
-        applyManifest: async (_yaml: string) => {
+        applyManifest: async (yaml: string) => {
           // Apply K8s manifest
-          // TODO: Implement manifest application
-          console.log('Applying manifest');
+          try {
+            await TauriService.applyK8sManifest(yaml);
+            console.log('Manifest applied successfully');
+          } catch (error) {
+            console.error('Failed to apply manifest:', error);
+            throw error;
+          }
         },
-        deleteResource: async (kind: string, name: string, _namespace?: string) => {
+        deleteResource: async (kind: string, name: string, namespace?: string) => {
           // Delete K8s resource
-          console.log(`Deleting ${kind} ${name}`);
+          try {
+            await TauriService.deleteK8sResource(kind, name, namespace || 'default');
+            console.log(`Deleted ${kind} ${name} in namespace ${namespace || 'default'}`);
+          } catch (error) {
+            console.error('Failed to delete resource:', error);
+            throw error;
+          }
         },
       },
       ansible: {
         runPlaybook: async (playbook: string, inventory: string) => {
           return await TauriService.runAnsiblePlaybook(playbook, inventory);
         },
-        validatePlaybook: async (_playbook: string) => {
+        validatePlaybook: async (playbook: string) => {
           // Validate playbook syntax
-          // TODO: Implement playbook validation
-          return { valid: true, errors: [] };
+          try {
+            const result = await TauriService.validateAnsiblePlaybook(playbook);
+            return result;
+          } catch (error) {
+            return { valid: false, errors: [String(error)] };
+          }
         },
-        encryptVault: async (_content: string, _password: string) => {
+        encryptVault: async (content: string, password: string) => {
           // Encrypt with Ansible Vault
-          // TODO: Implement vault encryption
-          return 'encrypted_content';
+          try {
+            const encrypted = await TauriService.encryptAnsibleVault(content, password);
+            return encrypted;
+          } catch (error) {
+            console.error('Vault encryption failed:', error);
+            throw error;
+          }
         },
       },
       storage: {
