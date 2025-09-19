@@ -91,20 +91,24 @@ export class ExtensionRuntime {
   private createExtensionAPI(): ExtensionAPI {
     return {
       workspace: {
-        getConfiguration: (section?: string) => {
+        getConfiguration: (_section?: string) => {
           // Return configuration from store
+          // TODO: Implement configuration retrieval using section parameter
           return {} as any;
         },
-        onDidChangeConfiguration: (listener: (e: any) => void) => {
+        onDidChangeConfiguration: (_listener: (e: any) => void) => {
           // Register configuration change listener
+          // TODO: Implement listener registration
           return { dispose: () => {} };
         },
-        openTextDocument: async (uri: string) => {
+        openTextDocument: async (_uri: string) => {
           // Open document via Tauri
+          // TODO: Implement document opening using uri
           return {} as any;
         },
-        applyEdit: async (edit: any) => {
+        applyEdit: async (_edit: any) => {
           // Apply workspace edit
+          // TODO: Implement edit application
           return true;
         },
       },
@@ -115,25 +119,29 @@ export class ExtensionRuntime {
         },
         showInputBox: async (options?: any) => {
           // Show input dialog
-          return prompt(options?.prompt || 'Input:') || undefined;
+          const message = options?.prompt || 'Input:';
+          return prompt(message) || undefined;
         },
-        showQuickPick: async (items: string[], options?: any) => {
+        showQuickPick: async (items: string[], _options?: any) => {
           // Show selection dialog
+          // TODO: Implement options for quick pick
           return items[0];
         },
         createOutputChannel: (name: string) => {
           // Create output channel
+          console.log(`Creating output channel: ${name}`);
           return {
-            append: (value: string) => console.log(value),
-            appendLine: (value: string) => console.log(value),
-            clear: () => {},
-            show: () => {},
-            hide: () => {},
-            dispose: () => {},
+            append: (value: string) => console.log(`[${name}]`, value),
+            appendLine: (value: string) => console.log(`[${name}]`, value),
+            clear: () => console.log(`[${name}] Cleared`),
+            show: () => console.log(`[${name}] Shown`),
+            hide: () => console.log(`[${name}] Hidden`),
+            dispose: () => console.log(`[${name}] Disposed`),
           };
         },
-        createStatusBarItem: (alignment?: any, priority?: number) => {
+        createStatusBarItem: (_alignment?: any, _priority?: number) => {
           // Create status bar item
+          // TODO: Use alignment and priority for positioning
           return {
             text: '',
             tooltip: undefined,
@@ -145,8 +153,9 @@ export class ExtensionRuntime {
         },
       },
       commands: {
-        registerCommand: (command: string, callback: (...args: any[]) => any) => {
+        registerCommand: (_command: string, _callback: (...args: any[]) => any) => {
           // Register command handler
+          // TODO: Implement command registration
           return { dispose: () => {} };
         },
         executeCommand: async (command: string, ...args: any[]) => {
@@ -173,8 +182,9 @@ export class ExtensionRuntime {
           // Stop container via Tauri
           console.log(`Stopping container ${id}`);
         },
-        executeCommand: async (containerId: string, command: string[]) => {
+        executeCommand: async (_containerId: string, _command: string[]) => {
           // Execute command in container
+          // TODO: Implement Docker command execution
           return 'command output';
         },
       },
@@ -182,11 +192,12 @@ export class ExtensionRuntime {
         listPods: async (namespace?: string) => {
           return await TauriService.getK8sPods(namespace);
         },
-        applyManifest: async (yaml: string) => {
+        applyManifest: async (_yaml: string) => {
           // Apply K8s manifest
+          // TODO: Implement manifest application
           console.log('Applying manifest');
         },
-        deleteResource: async (kind: string, name: string, namespace?: string) => {
+        deleteResource: async (kind: string, name: string, _namespace?: string) => {
           // Delete K8s resource
           console.log(`Deleting ${kind} ${name}`);
         },
@@ -195,12 +206,14 @@ export class ExtensionRuntime {
         runPlaybook: async (playbook: string, inventory: string) => {
           return await TauriService.runAnsiblePlaybook(playbook, inventory);
         },
-        validatePlaybook: async (playbook: string) => {
+        validatePlaybook: async (_playbook: string) => {
           // Validate playbook syntax
+          // TODO: Implement playbook validation
           return { valid: true, errors: [] };
         },
-        encryptVault: async (content: string, password: string) => {
+        encryptVault: async (_content: string, _password: string) => {
           // Encrypt with Ansible Vault
+          // TODO: Implement vault encryption
           return 'encrypted_content';
         },
       },
