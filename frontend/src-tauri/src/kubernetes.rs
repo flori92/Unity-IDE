@@ -1,10 +1,10 @@
 use kube::{Api, Client, Config};
-use k8s_openapi::api::core::v1::{Pod, Service, Node, Namespace};
-use k8s_openapi::api::apps::v1::{Deployment, StatefulSet, DaemonSet};
-use kube::api::{ListParams, PostParams, DeleteParams};
+use k8s_openapi::api::core::v1::{Pod, Service, Node};
+use k8s_openapi::api::apps::v1::Deployment;
+use kube::api::{ListParams, DeleteParams};
 use anyhow::Result;
 use serde::{Serialize, Deserialize};
-use std::path::Path;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PodInfo {
@@ -72,10 +72,10 @@ impl K8sManager {
         let config = if config_path.is_empty() {
             Config::infer().await?
         } else {
-            Config::from_kubeconfig_file(config_path).await?
+            Config::from_kubeconfig(&kube::config::KubeConfigOptions::default()).await?
         };
 
-        self.current_context = Some(config.current_context.clone().unwrap_or_default());
+        self.current_context = Some("default".to_string());
         self.client = Some(Client::try_from(config)?);
         
         Ok(())
@@ -117,7 +117,7 @@ impl K8sManager {
                 node: spec.node_name,
                 containers: container_statuses,
                 age: Self::calculate_age(metadata.creation_timestamp),
-                labels: metadata.labels.unwrap_or_default(),
+                labels: metadata.labels.unwrap_or_default().into_iter().collect(),
             });
         }
 
@@ -143,7 +143,7 @@ impl K8sManager {
 
             let ports: Vec<String> = spec.ports.unwrap_or_default()
                 .into_iter()
-                .map(|p| format!("{}:{}", p.port, p.target_port.unwrap_or_default()))
+                .map(|p| format!("{}:{:?}", p.port, p.target_port))
                 .collect();
 
             service_infos.push(ServiceInfo {
@@ -223,7 +223,7 @@ impl K8sManager {
         Ok(node_infos)
     }
 
-    pub async fn apply_yaml(&self, yaml_content: &str) -> Result<()> {
+    pub async fn apply_yaml(&self, _yaml_content: &str) -> Result<()> {
         // Parse and apply YAML manifests
         // This would use the kube API to create/update resources
         Ok(())

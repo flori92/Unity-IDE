@@ -71,7 +71,7 @@ async fn get_system_metrics(state: tauri::State<'_, AppState>) -> Result<String,
 
 #[tauri::command]
 async fn install_extension(state: tauri::State<'_, AppState>, extension_id: String) -> Result<String, String> {
-    let extensions = state.extensions.lock().await;
+    let mut extensions = state.extensions.lock().await;
     match extensions.install(&extension_id).await {
         Ok(_) => Ok(format!("Extension {} installed successfully", extension_id)),
         Err(e) => Err(e.to_string()),
@@ -80,7 +80,7 @@ async fn install_extension(state: tauri::State<'_, AppState>, extension_id: Stri
 
 #[tauri::command]
 async fn connect_to_cluster(state: tauri::State<'_, AppState>, config_path: String) -> Result<String, String> {
-    let k8s = state.k8s.lock().await;
+    let mut k8s = state.k8s.lock().await;
     match k8s.connect(&config_path).await {
         Ok(_) => Ok("Connected to Kubernetes cluster".to_string()),
         Err(e) => Err(e.to_string()),
@@ -97,7 +97,7 @@ async fn docker_compose_up(state: tauri::State<'_, AppState>, compose_path: Stri
 }
 
 #[tauri::command]
-async fn create_workflow(name: String, workflow_def: String) -> Result<String, String> {
+async fn create_workflow(name: String, _workflow_def: String) -> Result<String, String> {
     // Workflow creation logic
     Ok(format!("Workflow {} created", name))
 }
@@ -127,9 +127,9 @@ fn create_menu() -> Menu {
     let submenu_file = Submenu::new("File", Menu::new()
         .add_item(new_workflow)
         .add_item(import_workflow)
-        .add_separator()
+        .add_native_item(MenuItem::Separator)
         .add_item(preferences)
-        .add_separator()
+        .add_native_item(MenuItem::Separator)
         .add_item(close)
         .add_item(quit));
 

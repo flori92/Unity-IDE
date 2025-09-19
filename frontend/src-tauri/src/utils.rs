@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 use anyhow::Result;
-use serde::{Serialize, Deserialize};
+// use serde::{Serialize, Deserialize};
 
 pub fn get_config_dir() -> Result<PathBuf> {
     let config_dir = dirs::config_dir()

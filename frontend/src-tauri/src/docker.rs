@@ -1,10 +1,9 @@
 use bollard::Docker;
-use bollard::container::{ListContainersOptions, Config};
+use bollard::container::ListContainersOptions;
 use bollard::image::ListImagesOptions;
-use bollard::service::{ContainerSummary, ImageSummary};
-use std::collections::HashMap;
 use anyhow::Result;
 use serde::{Serialize, Deserialize};
+// use futures_util::stream::StreamExt;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ContainerInfo {
@@ -58,7 +57,7 @@ impl DockerManager {
                     .map(|port| PortInfo {
                         private_port: port.private_port,
                         public_port: port.public_port,
-                        port_type: port.typ.unwrap_or_default().to_string(),
+                        port_type: port.typ.map(|t| t.to_string()).unwrap_or_default(),
                     })
                     .collect();
 
@@ -89,9 +88,9 @@ impl DockerManager {
             .into_iter()
             .map(|image| ImageInfo {
                 id: image.id,
-                repo_tags: image.repo_tags.unwrap_or_default(),
-                size: image.size.unwrap_or_default(),
-                created: image.created.unwrap_or_default(),
+                repo_tags: image.repo_tags,
+                size: image.size,
+                created: image.created,
             })
             .collect();
 

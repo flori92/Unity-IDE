@@ -105,9 +105,39 @@ create_installers() {
         Darwin)
             echo "Building for macOS..."
             # The DMG will be in frontend/src-tauri/target/release/bundle/dmg/
-            if [ -f "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_0.1.0_x64.dmg" ]; then
-                cp "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_0.1.0_x64.dmg" "dist/DevOpsUnityIDE-macOS.dmg"
-                echo -e "${GREEN}✓ macOS installer created: dist/DevOpsUnityIDE-macOS.dmg${NC}"
+            # Check for different possible DMG names and architectures
+            DMG_FOUND=false
+            
+            # Check for ARM64 DMG
+            if [ -f "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_aarch64.dmg" ]; then
+                cp "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_aarch64.dmg" "dist/DevOpsUnityIDE-macOS-ARM64.dmg"
+                echo -e "${GREEN}✓ macOS ARM64 installer created: dist/DevOpsUnityIDE-macOS-ARM64.dmg${NC}"
+                DMG_FOUND=true
+            fi
+            
+            # Check for x64 DMG
+            if [ -f "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_x64.dmg" ]; then
+                cp "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_x64.dmg" "dist/DevOpsUnityIDE-macOS-x64.dmg"
+                echo -e "${GREEN}✓ macOS x64 installer created: dist/DevOpsUnityIDE-macOS-x64.dmg${NC}"
+                DMG_FOUND=true
+            fi
+            
+            # Check for universal DMG
+            if [ -f "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_universal.dmg" ]; then
+                cp "frontend/src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_universal.dmg" "dist/DevOpsUnityIDE-macOS-Universal.dmg"
+                echo -e "${GREEN}✓ macOS Universal installer created: dist/DevOpsUnityIDE-macOS-Universal.dmg${NC}"
+                DMG_FOUND=true
+            fi
+            
+            # Check for any DMG file
+            if [ "$DMG_FOUND" = false ]; then
+                DMG_FILE=$(find frontend/src-tauri/target/release/bundle/dmg/ -name "*.dmg" | head -1)
+                if [ -n "$DMG_FILE" ]; then
+                    cp "$DMG_FILE" "dist/DevOpsUnityIDE-macOS.dmg"
+                    echo -e "${GREEN}✓ macOS installer created: dist/DevOpsUnityIDE-macOS.dmg${NC}"
+                else
+                    echo -e "${YELLOW}⚠️  No DMG file found in frontend/src-tauri/target/release/bundle/dmg/${NC}"
+                fi
             fi
             
             # Also create app bundle

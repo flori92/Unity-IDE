@@ -287,7 +287,7 @@ impl ExtensionManager {
         Ok(manifest)
     }
 
-    fn extract_extension(&self, archive_path: &Path, target_dir: &Path) -> Result<()> {
+    fn extract_extension(&self, _archive_path: &Path, target_dir: &Path) -> Result<()> {
         // Extract ZIP archive
         // This would use a ZIP library to extract the archive
         fs::create_dir_all(target_dir)?;
@@ -296,13 +296,13 @@ impl ExtensionManager {
         Ok(())
     }
 
-    async fn activate_extension(&self, extension_id: &str) -> Result<()> {
+    async fn activate_extension(&self, _extension_id: &str) -> Result<()> {
         // Load and activate the extension
         // This would execute the extension's activation code
         Ok(())
     }
 
-    async fn deactivate_extension(&self, extension_id: &str) -> Result<()> {
+    async fn deactivate_extension(&self, _extension_id: &str) -> Result<()> {
         // Deactivate the extension
         // This would execute the extension's deactivation code
         Ok(())

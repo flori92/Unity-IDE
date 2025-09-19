@@ -10,9 +10,14 @@ import (
 	"syscall"
 	"time"
 
+	"devops-unity-backend/pkg/ansible"
+	"devops-unity-backend/pkg/docker"
+	"devops-unity-backend/pkg/kubernetes"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 var upgrader = websocket.Upgrader{
@@ -31,6 +36,13 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 }
+
+// Global managers
+var (
+	dockerManager  *docker.DockerManager
+	k8sManager     *kubernetes.K8sManager
+	ansibleManager *ansible.AnsibleManager
+)
 
 type Client struct {
 	hub  *Hub
@@ -176,10 +188,11 @@ func setupRouter(hub *Hub) *gin.Engine {
 
 	// Configure CORS
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000", "http://localhost:5173", "tauri://localhost"}
+	config.AllowOrigins = []string{"http://localhost:3000", "http://localhost:5173", "tauri://localhost", "http://127.0.0.1:5173"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
-	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept"}
+	config.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Accept", "X-Requested-With"}
 	config.AllowCredentials = true
+	config.AllowWildcard = true
 	router.Use(cors.New(config))
 
 	// API v1 routes
@@ -259,95 +272,256 @@ func setupRouter(hub *Hub) *gin.Engine {
 
 // Docker handlers
 func getDockerContainers(c *gin.Context) {
-	// Mock implementation
-	c.JSON(200, gin.H{
-		"containers": []map[string]interface{}{
-			{
-				"id":     "abc123",
-				"name":   "nginx",
-				"status": "running",
-				"image":  "nginx:latest",
-			},
-		},
-	})
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	containers, err := dockerManager.ListContainers()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"containers": containers})
 }
 
 func startContainer(c *gin.Context) {
 	id := c.Param("id")
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	err := dockerManager.StartContainer(id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": fmt.Sprintf("Container %s started", id)})
 }
 
 func stopContainer(c *gin.Context) {
 	id := c.Param("id")
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	err := dockerManager.StopContainer(id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": fmt.Sprintf("Container %s stopped", id)})
 }
 
 func removeContainer(c *gin.Context) {
 	id := c.Param("id")
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	err := dockerManager.RemoveContainer(id)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": fmt.Sprintf("Container %s removed", id)})
 }
 
 func getDockerImages(c *gin.Context) {
-	c.JSON(200, gin.H{"images": []string{"nginx:latest", "alpine:3.14"}})
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	images, err := dockerManager.ListImages()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"images": images})
 }
 
 func pullImage(c *gin.Context) {
 	var body map[string]string
 	c.BindJSON(&body)
-	c.JSON(200, gin.H{"message": fmt.Sprintf("Pulling image %s", body["image"])})
+
+	if dockerManager == nil {
+		c.JSON(500, gin.H{"error": "Docker manager not initialized"})
+		return
+	}
+
+	imageName := body["image"]
+	if imageName == "" {
+		c.JSON(400, gin.H{"error": "Image name is required"})
+		return
+	}
+
+	err := dockerManager.PullImage(imageName)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": fmt.Sprintf("Image %s pulled successfully", imageName)})
 }
 
 // Kubernetes handlers
 func getK8sPods(c *gin.Context) {
 	namespace := c.DefaultQuery("namespace", "default")
-	c.JSON(200, gin.H{
-		"pods": []map[string]interface{}{
-			{
-				"name":      "app-pod-1",
-				"namespace": namespace,
-				"status":    "Running",
-			},
-		},
-	})
+	if k8sManager == nil {
+		c.JSON(500, gin.H{"error": "Kubernetes manager not initialized"})
+		return
+	}
+
+	pods, err := k8sManager.ListPods(namespace)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"pods": pods})
 }
 
 func getK8sDeployments(c *gin.Context) {
-	c.JSON(200, gin.H{"deployments": []string{"app-deployment"}})
+	namespace := c.DefaultQuery("namespace", "default")
+	if k8sManager == nil {
+		c.JSON(500, gin.H{"error": "Kubernetes manager not initialized"})
+		return
+	}
+
+	deployments, err := k8sManager.ListDeployments(namespace)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"deployments": deployments})
 }
 
 func getK8sServices(c *gin.Context) {
-	c.JSON(200, gin.H{"services": []string{"app-service"}})
+	namespace := c.DefaultQuery("namespace", "default")
+	if k8sManager == nil {
+		c.JSON(500, gin.H{"error": "Kubernetes manager not initialized"})
+		return
+	}
+
+	services, err := k8sManager.ListServices(namespace)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"services": services})
 }
 
 func getK8sNodes(c *gin.Context) {
-	c.JSON(200, gin.H{"nodes": []map[string]interface{}{
-		{"name": "node-1", "status": "Ready"},
-	}})
+	if k8sManager == nil {
+		c.JSON(500, gin.H{"error": "Kubernetes manager not initialized"})
+		return
+	}
+
+	nodes, err := k8sManager.ListNodes()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"nodes": nodes})
 }
 
 func applyK8sManifest(c *gin.Context) {
 	var body map[string]string
 	c.BindJSON(&body)
+
+	if k8sManager == nil {
+		c.JSON(500, gin.H{"error": "Kubernetes manager not initialized"})
+		return
+	}
+
+	manifest := body["manifest"]
+	if manifest == "" {
+		c.JSON(400, gin.H{"error": "Manifest is required"})
+		return
+	}
+
+	err := k8sManager.ApplyManifest(manifest)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
 	c.JSON(200, gin.H{"message": "Manifest applied successfully"})
 }
 
 // Ansible handlers
 func getPlaybooks(c *gin.Context) {
-	c.JSON(200, gin.H{"playbooks": []string{"site.yml", "deploy.yml"}})
+	if ansibleManager == nil {
+		c.JSON(500, gin.H{"error": "Ansible manager not initialized"})
+		return
+	}
+
+	playbooks, err := ansibleManager.ListPlaybooks()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"playbooks": playbooks})
 }
 
 func runPlaybook(c *gin.Context) {
-	var body map[string]string
+	var body map[string]interface{}
 	c.BindJSON(&body)
-	c.JSON(200, gin.H{"message": fmt.Sprintf("Running playbook %s", body["playbook"])})
+
+	if ansibleManager == nil {
+		c.JSON(500, gin.H{"error": "Ansible manager not initialized"})
+		return
+	}
+
+	playbook, ok := body["playbook"].(string)
+	if !ok || playbook == "" {
+		c.JSON(400, gin.H{"error": "Playbook path is required"})
+		return
+	}
+
+	inventory, _ := body["inventory"].(string)
+	extraVars, _ := body["extraVars"].(map[string]interface{})
+
+	execution, err := ansibleManager.RunPlaybook(playbook, inventory, extraVars)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"execution": execution})
 }
 
 func getInventory(c *gin.Context) {
-	c.JSON(200, gin.H{"hosts": []string{"web-server-1", "db-server-1"}})
+	if ansibleManager == nil {
+		c.JSON(500, gin.H{"error": "Ansible manager not initialized"})
+		return
+	}
+
+	inventories, err := ansibleManager.ListInventories()
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"inventories": inventories})
 }
 
 func getRoles(c *gin.Context) {
-	c.JSON(200, gin.H{"roles": []string{"nginx", "postgresql"}})
+	// For now, return empty list - roles management can be added later
+	c.JSON(200, gin.H{"roles": []string{}})
 }
 
 // Monitoring handlers
@@ -385,10 +559,10 @@ func listExtensions(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"extensions": []map[string]interface{}{
 			{
-				"id":          "ext-1",
-				"name":        "AWS Integration",
-				"version":     "1.0.0",
-				"installed":   true,
+				"id":        "ext-1",
+				"name":      "AWS Integration",
+				"version":   "1.0.0",
+				"installed": true,
 			},
 		},
 	})
@@ -398,10 +572,10 @@ func getMarketplace(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"extensions": []map[string]interface{}{
 			{
-				"id":          "ext-2",
-				"name":        "Azure DevOps",
-				"version":     "2.0.0",
-				"downloads":   1000,
+				"id":        "ext-2",
+				"name":      "Azure DevOps",
+				"version":   "2.0.0",
+				"downloads": 1000,
 			},
 		},
 	})
@@ -423,8 +597,8 @@ func listWorkflows(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"workflows": []map[string]interface{}{
 			{
-				"id":   "wf-1",
-				"name": "Deploy to Production",
+				"id":     "wf-1",
+				"name":   "Deploy to Production",
 				"status": "active",
 			},
 		},
@@ -448,6 +622,40 @@ func deleteWorkflow(c *gin.Context) {
 }
 
 func main() {
+	// Initialize logrus
+	logrus.SetLevel(logrus.InfoLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	// Initialize managers
+	logrus.Info("Initializing managers...")
+
+	// Initialize Docker manager
+	var err error
+	dockerManager, err = docker.NewDockerManager()
+	if err != nil {
+		logrus.Warnf("Failed to initialize Docker manager: %v", err)
+	} else {
+		logrus.Info("Docker manager initialized successfully")
+	}
+
+	// Initialize Kubernetes manager
+	k8sManager, err = kubernetes.NewK8sManager()
+	if err != nil {
+		logrus.Warnf("Failed to initialize Kubernetes manager: %v", err)
+	} else {
+		logrus.Info("Kubernetes manager initialized successfully")
+	}
+
+	// Initialize Ansible manager
+	ansibleManager = ansible.NewAnsibleManager()
+	if err := ansibleManager.Initialize(); err != nil {
+		logrus.Warnf("Failed to initialize Ansible manager: %v", err)
+	} else {
+		logrus.Info("Ansible manager initialized successfully")
+	}
+
 	// Set Gin to release mode in production
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.DebugMode)
@@ -462,15 +670,15 @@ func main() {
 
 	// Create HTTP server
 	srv := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":9090",
 		Handler: router,
 	}
 
 	// Start server in goroutine
 	go func() {
-		log.Printf("Server starting on port 8080...")
+		logrus.Infof("Server starting on port 9090...")
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Failed to start server: %v", err)
+			logrus.Fatalf("Failed to start server: %v", err)
 		}
 	}()
 
@@ -478,7 +686,7 @@ func main() {
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
-		
+
 		for {
 			select {
 			case <-ticker.C:

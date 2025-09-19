@@ -5,7 +5,7 @@
  */
 
 // Charger la configuration depuis le fichier config.json
-let API_BASE_URL = 'http://127.0.0.1:9090/api';
+let API_BASE_URL = 'http://127.0.0.1:9090/api/v1';
 let WS_URL = 'ws://127.0.0.1:9090/ws';
 
 // Fonction pour charger la configuration
