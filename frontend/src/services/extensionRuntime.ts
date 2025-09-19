@@ -3,14 +3,12 @@
  * Manages loading, executing, and sandboxing extensions
  */
 
-import { Extension, ExtensionManifest, ExtensionAPI } from '../types/extension';
+import { ExtensionManifest, ExtensionAPI } from '../types/extension';
 import { TauriService } from './tauriService';
-import { WebSocketService } from './websocketService';
 
 export class ExtensionRuntime {
   private loadedExtensions: Map<string, ExtensionInstance> = new Map();
   private extensionAPI: ExtensionAPI;
-  private sandboxWorker: Worker | null = null;
 
   constructor() {
     this.extensionAPI = this.createExtensionAPI();
@@ -56,7 +54,7 @@ export class ExtensionRuntime {
 
     try {
       // Call deactivation
-      if (instance.exports?.deactivate) {
+      if (instance.exports && typeof instance.exports.deactivate === 'function') {
         await instance.exports.deactivate();
       }
 
@@ -75,10 +73,12 @@ export class ExtensionRuntime {
    */
   async executeCommand(command: string, ...args: any[]): Promise<any> {
     // Find which extension provides this command
-    for (const [extensionId, instance] of this.loadedExtensions) {
+    for (const [, instance] of this.loadedExtensions) {
       if (instance.commands.has(command)) {
         const handler = instance.commands.get(command);
-        return await handler(...args);
+        if (handler) {
+          return await handler(...args);
+        }
       }
     }
     

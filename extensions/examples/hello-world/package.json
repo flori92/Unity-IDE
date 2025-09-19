@@ -1,0 +1,33 @@
+{
+  "name": "hello-world-extension",
+  "displayName": "Hello World Extension",
+  "version": "1.0.0",
+  "description": "A simple hello world extension example for DevOps Unity IDE",
+  "publisher": "devops-unity",
+  "main": "./dist/extension.js",
+  "engines": {
+    "devopsUnity": "^1.0.0"
+  },
+  "categories": ["Other"],
+  "keywords": ["hello", "world", "example"],
+  "activationEvents": [
+    "onCommand:helloWorld.sayHello"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "helloWorld.sayHello",
+        "title": "Hello World",
+        "category": "Hello World"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

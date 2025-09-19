@@ -22,7 +22,7 @@
   },
   "files": [
     "dist",
-    "extension-api.ts"
+    "extension-api.d.ts"
   ],
   "repository": {
     "type": "git",
