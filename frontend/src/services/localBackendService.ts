@@ -4,8 +4,25 @@
  * Similar to how Docker Desktop works
  */
 
-const API_BASE_URL = 'http://127.0.0.1:9090/api';
-const WS_URL = 'ws://127.0.0.1:9090/ws';
+// Charger la configuration depuis le fichier config.json
+let API_BASE_URL = 'http://127.0.0.1:9090/api';
+let WS_URL = 'ws://127.0.0.1:9090/ws';
+
+// Fonction pour charger la configuration
+export const loadConfig = async () => {
+  try {
+    const response = await fetch('/config.json');
+    const config = await response.json();
+    API_BASE_URL = config.apiUrl || API_BASE_URL;
+    WS_URL = config.wsUrl || WS_URL;
+    console.log('Configuration chargée:', { API_BASE_URL, WS_URL });
+  } catch (error) {
+    console.warn('Impossible de charger la configuration, utilisation des valeurs par défaut');
+  }
+};
+
+// Charger la configuration immédiatement
+loadConfig();
 
 export interface SystemInfo {
   os: string;

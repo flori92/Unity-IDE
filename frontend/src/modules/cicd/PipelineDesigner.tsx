@@ -70,7 +70,6 @@ import {
   CheckCircle as ApprovalIcon,
   GitHub as GitHubIcon,
   Storage as ArtifactIcon,
-  Docker as DockerIcon,
   CloudQueue as K8sIcon,
   Settings as SettingsIcon,
   Add as AddIcon,
@@ -209,7 +208,7 @@ const PipelineDesigner: React.FC = () => {
   // Node Templates
   const nodeTemplates = [
     { type: 'source', label: 'Git Clone', icon: <GitHubIcon />, category: 'Source' },
-    { type: 'build', label: 'Docker Build', icon: <DockerIcon />, category: 'Build' },
+    { type: 'build', label: 'Docker Build', icon: <BuildIcon />, category: 'Build' },
     { type: 'build', label: 'Maven Build', icon: <BuildIcon />, category: 'Build' },
     { type: 'build', label: 'NPM Build', icon: <BuildIcon />, category: 'Build' },
     { type: 'test', label: 'Unit Tests', icon: <TestIcon />, category: 'Test' },
@@ -217,7 +216,7 @@ const PipelineDesigner: React.FC = () => {
     { type: 'security', label: 'Security Scan', icon: <SecurityIcon />, category: 'Security' },
     { type: 'security', label: 'SAST Analysis', icon: <SecurityIcon />, category: 'Security' },
     { type: 'deploy', label: 'Deploy to K8s', icon: <K8sIcon />, category: 'Deploy' },
-    { type: 'deploy', label: 'Deploy to AWS', icon: <CloudQueue />, category: 'Deploy' },
+    { type: 'deploy', label: 'Deploy to AWS', icon: <K8sIcon />, category: 'Deploy' },
     { type: 'approval', label: 'Manual Approval', icon: <ApprovalIcon />, category: 'Control' },
     { type: 'notify', label: 'Send Notification', icon: <NotifyIcon />, category: 'Notify' },
     { type: 'parallel', label: 'Parallel Stage', icon: <ParallelIcon />, category: 'Control' },
@@ -602,7 +601,7 @@ const PipelineDesigner: React.FC = () => {
               nodeTypes={nodeTypes}
               fitView
             >
-              <Background variant="dots" gap={12} size={1} />
+              <Background gap={12} size={1} />
               <Controls />
               <MiniMap
                 nodeStrokeColor={(n) => {
