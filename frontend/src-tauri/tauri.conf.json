@@ -25,9 +25,9 @@
         "assetScope": ["**"]
       },
       "process": {
-        "all": true,
-        "relaunch": true,
-        "relaunchDangerousAllowSymlinkMaui": false
+        "all": false,
+        "exit": true,
+        "relaunch": true
       },
       "shell": {
         "all": true,
@@ -116,7 +116,7 @@
         "skipTaskbar": false,
         "fileDropEnabled": true,
         "transparent": false,
-        "theme": "dark"
+        "theme": "Dark"
       }
     ],
     "systemTray": {

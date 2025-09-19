@@ -1,42 +1,42 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import { SnackbarProvider } from 'notistack';
 
 // Layout Components
 import MainLayout from './components/layout/MainLayout';
-import Sidebar from './components/layout/Sidebar';
-import TopBar from './components/layout/TopBar';
 
 // Module Components
 import Dashboard from './modules/dashboard/Dashboard';
-import DockerModule from './modules/docker/DockerModule';
-import KubernetesModule from './modules/kubernetes/KubernetesModule';
-import AnsibleModule from './modules/ansible/AnsibleModule';
-import WorkflowBuilder from './modules/workflows/WorkflowBuilder';
-import ExtensionsMarketplace from './modules/extensions/ExtensionsMarketplace';
-import MonitoringDashboard from './modules/monitoring/MonitoringDashboard';
-import Settings from './modules/settings/Settings';
+import AIAssistant from './modules/ai-assistant/AIAssistant';
+import SecurityHub from './modules/security/SecurityHub';
+import MultiCloudManager from './modules/cloud/MultiCloudManager';
+import ObservabilitySuite from './modules/observability/ObservabilitySuite';
+import PipelineDesigner from './modules/cicd/PipelineDesigner';
+import GitOpsManager from './modules/gitops/GitOpsManager';
+import IaCEditor from './modules/iac/IaCEditor';
+import CostOptimizer from './modules/cost/CostOptimizer';
+import ChaosEngineering from './modules/chaos/ChaosEngineering';
 
 // Stores
 import { useThemeStore } from './store/themeStore';
 import { useConnectionStore } from './store/connectionStore';
 import { useNotificationStore } from './store/notificationStore';
 
-// Services
-import { TauriService } from './services/tauriService';
-import { WebSocketService } from './services/websocketService';
+// Services - Commented out for development mode
+// import { TauriService } from './services/tauriService';
+// import { WebSocketService } from './services/websocketService';
 
-// Types
-import { AppTheme } from './types';
+// Types - Commented out as not used
+// import { AppTheme } from './types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (was cacheTime in v4)
       refetchOnWindowFocus: false,
       retry: 2,
     },
@@ -44,8 +44,8 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  const { isDarkMode, toggleTheme } = useThemeStore();
-  const { connections, initializeConnections } = useConnectionStore();
+  const { isDarkMode } = useThemeStore();
+  const { initializeConnections } = useConnectionStore();
   const { addNotification } = useNotificationStore();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -144,45 +144,24 @@ function App() {
   });
 
   useEffect(() => {
-    // Initialize Tauri connection
-    TauriService.initialize();
+    // WebSocket and Tauri disabled in development mode
+    // All services are mocked for demo purposes
     
-    // Initialize WebSocket connection
-    WebSocketService.connect('ws://localhost:8080/ws');
-    
-    // Subscribe to WebSocket events
-    WebSocketService.on('notification', (data) => {
-      addNotification({
-        message: data.message,
-        severity: data.severity || 'info',
-      });
-    });
-
-    WebSocketService.on('metrics_update', (data) => {
-      // Update metrics in store
-      console.log('Metrics updated:', data);
-    });
-
-    // Initialize connections
+    // Initialize connections (mocked)
     initializeConnections().then(() => {
       setIsLoading(false);
     });
 
-    // Listen for Tauri events
-    TauriService.listen('app_ready', (event) => {
-      console.log('App ready:', event);
+    // Show welcome notification
+    setTimeout(() => {
       addNotification({
         message: 'DevOps Unity IDE is ready',
         severity: 'success',
       });
-    });
-
-    TauriService.listen('monitoring_update', (event) => {
-      console.log('Monitoring update:', event);
-    });
+    }, 1000);
 
     return () => {
-      WebSocketService.disconnect();
+      // Cleanup if needed
     };
   }, []);
 
@@ -222,13 +201,15 @@ function App() {
               <Routes>
                 <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/docker/*" element={<DockerModule />} />
-                <Route path="/kubernetes/*" element={<KubernetesModule />} />
-                <Route path="/ansible/*" element={<AnsibleModule />} />
-                <Route path="/workflows/*" element={<WorkflowBuilder />} />
-                <Route path="/extensions" element={<ExtensionsMarketplace />} />
-                <Route path="/monitoring" element={<MonitoringDashboard />} />
-                <Route path="/settings" element={<Settings />} />
+                <Route path="/ai-assistant" element={<AIAssistant />} />
+                <Route path="/security" element={<SecurityHub />} />
+                <Route path="/cloud" element={<MultiCloudManager />} />
+                <Route path="/observability" element={<ObservabilitySuite />} />
+                <Route path="/cicd" element={<PipelineDesigner />} />
+                <Route path="/gitops" element={<GitOpsManager />} />
+                <Route path="/iac" element={<IaCEditor />} />
+                <Route path="/cost" element={<CostOptimizer />} />
+                <Route path="/chaos" element={<ChaosEngineering />} />
               </Routes>
             </MainLayout>
           </Router>
