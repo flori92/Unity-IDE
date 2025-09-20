@@ -184,73 +184,104 @@ function DockerModule() {
 }
 
 function CICDModule() {
-  // Exemple statique, à remplacer par une vraie API backend
-  const pipelines = [
-    { id: 'pipe1', name: 'Build & Deploy', status: 'success', jobs: [
-      { id: 'job1', name: 'Build', status: 'success' },
-      { id: 'job2', name: 'Test', status: 'success' },
-      { id: 'job3', name: 'Deploy', status: 'success' },
-    ] },
-    { id: 'pipe2', name: 'Release', status: 'failed', jobs: [
-      { id: 'job4', name: 'Build', status: 'success' },
-      { id: 'job5', name: 'Test', status: 'failed' },
-      { id: 'job6', name: 'Publish', status: 'pending' },
-    ] },
-  ];
+  const [pipelines, setPipelines] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await localBackend.getWorkflows();
+        setPipelines(data.workflows || []);
+      } catch (err: any) {
+        setError(err.message || 'Erreur CI/CD');
+      }
+      setLoading(false);
+    };
+    fetchWorkflows();
+  }, []);
+
+  if (loading) return <div>Chargement CI/CD...</div>;
+  if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
+
   return (
     <div className="cicd-module">
       <h2>CI/CD Pipelines</h2>
-      {pipelines.map(pipe => (
-        <div key={pipe.id} className="pipeline">
-          <h3>{pipe.name} <span className={pipe.status}>{pipe.status}</span></h3>
-          <ul>
-            {pipe.jobs.map(job => (
-              <li key={job.id} className={job.status}>
-                {job.name} <span>[{job.status}]</span>
-                <button>Logs</button>
-                <button>Relancer</button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ))}
+      {pipelines.length === 0 ? (
+        <p>Aucun pipeline trouvé.</p>
+      ) : (
+        pipelines.map((pipe: any) => (
+          <div key={pipe.id} className="pipeline">
+            <h3>{pipe.name} <span className={pipe.status}>{pipe.status}</span></h3>
+            <ul>
+              {pipe.jobs?.map((job: any) => (
+                <li key={job.id} className={job.status}>
+                  {job.name} <span>[{job.status}]</span>
+                  <button>Logs</button>
+                  <button>Relancer</button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      )}
     </div>
   );
 }
 
 function MonitoringModule() {
-  // Exemple statique, à remplacer par une vraie API backend
-  const metrics = {
-    cpu: 42,
-    ram: 68,
-    disk: 80,
-    net: 12,
-  };
-  const alerts = [
-    { id: 1, type: 'CPU', message: 'CPU élevé', severity: 'warning' },
-    { id: 2, type: 'RAM', message: 'RAM saturée', severity: 'critical' },
-  ];
+  const [metrics, setMetrics] = useState<any>(null);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchMonitoring = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const m = await localBackend.getSystemMetrics();
+        const a = await localBackend.getAlerts();
+        setMetrics(m);
+        setAlerts(a);
+      } catch (err: any) {
+        setError(err.message || 'Erreur monitoring');
+      }
+      setLoading(false);
+    };
+    fetchMonitoring();
+  }, []);
+
+  if (loading) return <div>Chargement Monitoring...</div>;
+  if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
+
   return (
     <div className="monitoring-module">
       <h2>Monitoring & Alertes</h2>
       <section>
         <h3>Métriques système</h3>
         <ul>
-          <li>CPU : {metrics.cpu}%</li>
-          <li>RAM : {metrics.ram}%</li>
-          <li>Disque : {metrics.disk}%</li>
-          <li>Réseau : {metrics.net} Mo/s</li>
+          <li>CPU : {metrics?.cpu?.usage ?? 'N/A'}%</li>
+          <li>RAM : {metrics?.memory?.usage ?? 'N/A'}%</li>
+          <li>Disque : {metrics?.disk?.usage ?? 'N/A'}%</li>
+          <li>Réseau : {metrics?.network?.rx ?? 'N/A'} Mo/s</li>
         </ul>
       </section>
       <section>
         <h3>Alertes</h3>
         <ul>
-          {alerts.map(a => (
-            <li key={a.id} className={a.severity}>
-              <strong>{a.type}</strong> : {a.message} [{a.severity}]
-              <button>Ack</button>
-            </li>
-          ))}
+          {alerts.length === 0 ? (
+            <li>Aucune alerte</li>
+          ) : (
+            alerts.map((a: any) => (
+              <li key={a.id} className={a.severity}>
+                <strong>{a.type || a.source}</strong> : {a.message} [{a.severity}]
+                <button>Ack</button>
+              </li>
+            ))
+          )}
         </ul>
       </section>
     </div>
