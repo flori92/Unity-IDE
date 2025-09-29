@@ -1,3 +1,45 @@
+import (
+	// ...existing imports...
+	"bytes"
+	"io"
+	"k8s.io/client-go/tools/remotecommand"
+	"k8s.io/client-go/rest"
+)
+// ExecInPod exécute une commande dans un pod Kubernetes et retourne la sortie
+func (km *K8sManager) ExecInPod(namespace, pod, container string, command []string) (string, error) {
+	if !km.IsConnected() {
+		return "", fmt.Errorf("not connected to Kubernetes cluster")
+	}
+	req := km.clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(pod).
+		Namespace(namespace).
+		SubResource("exec")
+	req.VersionedParams(&corev1.PodExecOptions{
+		Container: container,
+		Command:   command,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+	}, metav1.ParameterCodec)
+
+	exec, err := remotecommand.NewSPDYExecutor(km.config, "POST", req.URL())
+	if err != nil {
+		return "", err
+	}
+	var stdout, stderr bytes.Buffer
+	err = exec.Stream(remotecommand.StreamOptions{
+		Stdin:  nil,
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Tty:    false,
+	})
+	if err != nil {
+		return stderr.String(), err
+	}
+	return stdout.String(), nil
+}
 package kubernetes
 
 import (

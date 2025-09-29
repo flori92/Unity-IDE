@@ -1,3 +1,33 @@
+import (
+	// ...existing imports...
+	"context"
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/strslice"
+)
+// ExecInContainer exécute une commande dans un conteneur Docker et retourne la sortie
+func (dm *DockerManager) ExecInContainer(containerID string, command []string) (string, error) {
+	ctx := context.Background()
+	execConfig := types.ExecConfig{
+		Cmd:          strslice.StrSlice(command),
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+	}
+	execIDResp, err := dm.client.ContainerExecCreate(ctx, containerID, execConfig)
+	if err != nil {
+		return "", err
+	}
+	resp, err := dm.client.ContainerExecAttach(ctx, execIDResp.ID, types.ExecStartCheck{})
+	if err != nil {
+		return "", err
+	}
+	defer resp.Close()
+	out, err := io.ReadAll(resp.Reader)
+	if err != nil {
+		return "", err
+	}
+	return string(out), nil
+}
 package docker
 
 import (

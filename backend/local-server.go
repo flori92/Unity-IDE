@@ -18,6 +18,9 @@ import (
 type LocalBackend struct {
 	port   string
 	router *mux.Router
+	// Terminal/exec endpoints
+	lb.router.HandleFunc("/api/host/exec", lb.execHostCommand).Methods("POST")
+	lb.router.HandleFunc("/api/docker/container/exec", lb.execContainerCommand).Methods("POST")
 }
 
 func NewLocalBackend() *LocalBackend {
@@ -456,7 +459,84 @@ func (lb *LocalBackend) listPods(w http.ResponseWriter, r *http.Request) {
 	})
 }
 func (lb *LocalBackend) getPodLogs(w http.ResponseWriter, r *http.Request)       { w.WriteHeader(http.StatusOK); w.Write([]byte("getPodLogs")) }
-func (lb *LocalBackend) execPodCommand(w http.ResponseWriter, r *http.Request)   { w.WriteHeader(http.StatusOK); w.Write([]byte("execPodCommand")) }
+// Exécution d'une commande shell locale (host)
+func (lb *LocalBackend) execHostCommand(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var req struct {
+		Command string   `json:"command"`
+		Args    []string `json:"args"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Command == "" {
+		http.Error(w, "Commande manquante ou invalide", http.StatusBadRequest)
+		return
+	}
+	// Sécurité : à restreindre en prod !
+	out, err := exec.Command(req.Command, req.Args...).CombinedOutput()
+	result := map[string]interface{}{
+		"output": string(out),
+		"success": err == nil,
+	}
+	if err != nil {
+		result["error"] = err.Error()
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
+// Exécution d'une commande dans un conteneur Docker
+func (lb *LocalBackend) execContainerCommand(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var req struct {
+		ContainerID string   `json:"containerId"`
+		Command     []string `json:"command"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.ContainerID == "" || len(req.Command) == 0 {
+		http.Error(w, "Paramètres manquants ou invalides", http.StatusBadRequest)
+		return
+	}
+	dockerManager, err := docker.NewDockerManager()
+	if err != nil {
+		http.Error(w, "Docker non disponible: "+err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	output, err := dockerManager.ExecInContainer(req.ContainerID, req.Command)
+	result := map[string]interface{}{
+		"output": output,
+		"success": err == nil,
+	}
+	if err != nil {
+		result["error"] = err.Error()
+	}
+	json.NewEncoder(w).Encode(result)
+}
+
+// Exécution d'une commande dans un pod Kubernetes
+func (lb *LocalBackend) execPodCommand(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var req struct {
+		Namespace string   `json:"namespace"`
+		Pod       string   `json:"pod"`
+		Container string   `json:"container"`
+		Command   []string `json:"command"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.Pod == "" || len(req.Command) == 0 {
+		http.Error(w, "Paramètres manquants ou invalides", http.StatusBadRequest)
+		return
+	}
+	k8sManager, err := kubernetes.NewK8sManager()
+	if err != nil {
+		http.Error(w, "Kubernetes non disponible: "+err.Error(), http.StatusServiceUnavailable)
+		return
+	}
+	output, err := k8sManager.ExecInPod(req.Namespace, req.Pod, req.Container, req.Command)
+	result := map[string]interface{}{
+		"output": output,
+		"success": err == nil,
+	}
+	if err != nil {
+		result["error"] = err.Error()
+	}
+	json.NewEncoder(w).Encode(result)
+}
 func (lb *LocalBackend) listDeployments(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	namespace := r.URL.Query().Get("namespace")

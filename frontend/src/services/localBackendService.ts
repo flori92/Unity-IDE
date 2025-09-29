@@ -1,3 +1,10 @@
+  /**
+   * Supprime un pod Kubernetes
+   */
+  /**
+   * Supprime un pod Kubernetes
+   */
+
 /**
  * Local Backend Service
  * Communicates with the local backend server that runs on the user's machine
@@ -97,6 +104,132 @@ export interface MetricsData {
 }
 
 class LocalBackendService {
+  /**
+   * Supprime un pod Kubernetes
+   */
+
+  /**
+   * Redémarre un conteneur Docker
+   */
+  async restartContainer(containerId: string): Promise<{ status: string; id: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/container/restart`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: containerId }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Arrête un conteneur Docker
+   */
+  async stopContainer(containerId: string): Promise<{ status: string; id: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/container/stop`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: containerId }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Supprime un conteneur Docker
+   */
+  async removeContainer(containerId: string): Promise<{ status: string; id: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/container/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: containerId }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Supprime un pod Kubernetes
+   */
+  async deletePod(pod: string, namespace: string = 'default'): Promise<{ status: string; pod: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/k8s/delete`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ kind: 'Pod', name: pod, namespace }),
+    });
+    if (!response.ok) {
+      throw new Error('Erreur lors de la suppression du pod');
+    }
+    return response.json();
+  }
+
+  /**
+   * Récupère les logs d'un conteneur Docker
+   */
+  async getContainerLogs(containerId: string, tail: number = 100): Promise<{ logs: string[]; id: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/container/logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: containerId, tail }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Récupère les logs d'un pod Kubernetes
+   */
+  async getPodLogs(namespace: string, pod: string, container: string, tail: number = 100): Promise<{ logs: string[]; pod: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/k8s/pod/logs`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ namespace, pod, container, tail }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Exécute une commande shell locale (host)
+   */
+  async execHostCommand(command: string, args: string[] = []): Promise<{ output: string; success: boolean; error?: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/host/exec`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ command, args }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Exécute une commande dans un conteneur Docker
+   */
+  async execDockerCommand(containerId: string, command: string[]): Promise<{ output: string; success: boolean; error?: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/container/exec`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ containerId, command }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Exécute une commande dans un pod Kubernetes
+   */
+  async execK8sCommand(namespace: string, pod: string, container: string, command: string[]): Promise<{ output: string; success: boolean; error?: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/k8s/pod/exec`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ namespace, pod, container, command }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Exécute une commande ad-hoc Ansible (exemple)
+   */
+  async execAnsibleAdhoc(module: string, args: string, hosts: string): Promise<{ output: string; success: boolean; error?: string }> {
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/ansible/run-adhoc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ module, args, hosts }),
+    });
+    return response.json();
+  }
   private ws: WebSocket | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private metricsCallbacks: Set<(data: MetricsData) => void> = new Set();
@@ -162,14 +295,6 @@ class LocalBackendService {
   /**
    * Stop a container
    */
-  async stopContainer(containerId: string): Promise<void> {
-    const response = await fetch(`${API_BASE_URL}/docker/containers/${containerId}/stop`, {
-      method: 'POST',
-    });
-    if (!response.ok) {
-      throw new Error('Failed to stop container');
-    }
-  }
 
   /**
    * Get container stats

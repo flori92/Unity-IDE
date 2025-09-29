@@ -6,6 +6,9 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import { SnackbarProvider } from 'notistack';
 import { useThemeStore } from './store/themeStore';
 import AnimatedLoader from './components/AnimatedLoader';
+import ContextualTerminal from './components/ContextualTerminal';
+import InfraOverview from './modules/visualization/InfraOverview';
+import InfraGraph from './modules/visualization/InfraGraph';
 import ThemeSettings from './modules/settings/ThemeSettings';
 import NotificationCenter from './components/NotificationCenter';
 import { useConnectionStore } from './store/connectionStore';
@@ -64,33 +67,6 @@ function CodeEditor({ file }: { file: string }) {
   );
 }
 
-function Terminal() {
-  const [output, setOutput] = useState<string[]>([]);
-  const [command, setCommand] = useState('');
-
-  function handleRun() {
-    // Simulation locale, à remplacer par une vraie exécution backend
-    setOutput([...output, `$ ${command}`, `Résultat : commande '${command}' exécutée.`]);
-    setCommand('');
-  }
-
-  return (
-    <div className="terminal">
-      <h3>Terminal intégré</h3>
-      <div className="terminal-output">
-        {output.map((line: string, i: number) => <div key={i}>{line}</div>)}
-      </div>
-      <input
-        type="text"
-        value={command}
-        onChange={e => setCommand(e.target.value)}
-        onKeyDown={e => e.key === 'Enter' && handleRun()}
-        placeholder="Entrez une commande..."
-      />
-      <button onClick={handleRun}>Exécuter</button>
-    </div>
-  );
-}
 
 // ...import inutile supprimé : JSX automatique activé...
 import { localBackend, Container } from './services/localBackendService';
@@ -100,6 +76,7 @@ function DockerModule() {
   const [images, setImages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     const fetchDockerData = async () => {
@@ -112,11 +89,16 @@ function DockerModule() {
         setImages(imgs);
       } catch (err: any) {
         setError(err.message || 'Erreur Docker');
+        addNotification({
+          message: `Erreur Docker : ${err.message || 'Erreur inconnue'}`,
+          severity: 'error',
+          source: 'docker',
+        });
       }
       setLoading(false);
     };
     fetchDockerData();
-  }, []);
+  }, [addNotification]);
 
   async function handleStart(id: string) {
     try {
@@ -124,6 +106,11 @@ function DockerModule() {
       setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur démarrage');
+      addNotification({
+        message: `Erreur démarrage conteneur : ${err.message || id}`,
+        severity: 'error',
+        source: 'docker',
+      });
     }
   }
 
@@ -133,6 +120,11 @@ function DockerModule() {
       setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur arrêt');
+      addNotification({
+        message: `Erreur arrêt conteneur : ${err.message || id}`,
+        severity: 'error',
+        source: 'docker',
+      });
     }
   }
 
@@ -190,6 +182,7 @@ function CICDModule() {
   const [pipelines, setPipelines] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -200,11 +193,16 @@ function CICDModule() {
         setPipelines(data.workflows || []);
       } catch (err: any) {
         setError(err.message || 'Erreur CI/CD');
+        addNotification({
+          message: `Erreur CI/CD : ${err.message || 'Erreur inconnue'}`,
+          severity: 'error',
+          source: 'cicd',
+        });
       }
       setLoading(false);
     };
     fetchWorkflows();
-  }, []);
+  }, [addNotification]);
 
   if (loading) return <AnimatedLoader text="Chargement CI/CD..." />;
   if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
@@ -234,11 +232,13 @@ function CICDModule() {
   );
 }
 
+
 function MonitoringModule() {
   const [metrics, setMetrics] = useState<any>(null);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     const fetchMonitoring = async () => {
@@ -249,13 +249,22 @@ function MonitoringModule() {
         const a = await localBackend.getAlerts();
         setMetrics(m);
         setAlerts(a);
+        // Notification critique si alerte critique détectée
+        const critical = (a || []).find((al: any) => al.severity === 'critical' && al.status === 'firing');
+        if (critical) {
+          addNotification({
+            message: `Alerte critique : ${critical.name || critical.type || 'Incident'} - ${critical.message}`,
+            severity: 'error',
+            source: 'monitoring',
+          });
+        }
       } catch (err: any) {
         setError(err.message || 'Erreur monitoring');
       }
       setLoading(false);
     };
     fetchMonitoring();
-  }, []);
+  }, [addNotification]);
 
   if (loading) return <AnimatedLoader text="Chargement Monitoring..." />;
   if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
@@ -456,7 +465,7 @@ function App() {
             <div className="main-layout">
               <aside className="sidebar" role="navigation" aria-label="Navigation principale">
                 <ul>
-                  {['Dashboard', 'Projets', 'Docker', 'Kubernetes', 'Ansible', 'CI/CD', 'Monitoring', 'Extensions', 'Paramètres'].map((m) => (
+                  {['Dashboard', 'Vue Infra', 'Vue Graphique', 'Projets', 'Docker', 'Kubernetes', 'Ansible', 'CI/CD', 'Monitoring', 'Extensions', 'Paramètres'].map((m) => (
                     <li key={m} className={selectedModule === m ? 'active' : ''} onClick={() => handleModuleSelect(m)}>
                       {m}
                     </li>
@@ -478,8 +487,10 @@ function App() {
                       <p>Bienvenue sur le tableau de bord Unity DevOps IDE.</p>
                     </div>
                   )}
+                  {selectedModule === 'Vue Graphique' && <InfraGraph />}
+                  {selectedModule === 'Vue Infra' && <InfraOverview />}
                   {selectedModule === 'Projets' && <FileExplorer />}
-                  {selectedModule === 'Terminal' && <Terminal />}
+                  {selectedModule === 'Terminal' && <ContextualTerminal />}
                   {selectedModule === 'Docker' && <DockerModule />}
                   {selectedModule === 'CI/CD' && <CICDModule />}
                   {selectedModule === 'Monitoring' && <MonitoringModule />}
