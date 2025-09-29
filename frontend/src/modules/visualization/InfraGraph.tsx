@@ -1,3 +1,4 @@
+import { useNotificationStore } from '../../store/notificationStore';
 import React, { useEffect, useState } from 'react';
 import { Box, Typography, CircularProgress, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { localBackend } from '../../services/localBackendService';
@@ -52,6 +53,7 @@ const InfraGraph: React.FC = () => {
   const [execResult, setExecResult] = useState<string | null>(null);
   const [execOpen, setExecOpen] = useState(false);
   const [execCmd, setExecCmd] = useState('');
+  const { addNotification } = useNotificationStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -141,18 +143,34 @@ const InfraGraph: React.FC = () => {
       const id = selected.id.replace('docker-', '');
       try {
         await localBackend.restartContainer(id);
-        alert('Conteneur redémarré !');
+        addNotification({
+          message: 'Conteneur redémarré !',
+          severity: 'success',
+          source: 'docker',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors du redémarrage');
+        addNotification({
+          message: e.message || 'Erreur lors du redémarrage',
+          severity: 'error',
+          source: 'docker',
+        });
       }
     } else if (selected.id.startsWith('k8s-')) {
       // Pour K8s, on simule un restart par suppression puis re-création (basique)
       const pod = selected.id.replace('k8s-', '');
       try {
         await localBackend.deletePod(pod, 'default');
-        alert('Pod supprimé (restart simulé) !');
+        addNotification({
+          message: 'Pod supprimé (restart simulé) !',
+          severity: 'success',
+          source: 'k8s',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors du redémarrage du pod');
+        addNotification({
+          message: e.message || 'Erreur lors du redémarrage du pod',
+          severity: 'error',
+          source: 'k8s',
+        });
       }
     }
   };
@@ -163,18 +181,34 @@ const InfraGraph: React.FC = () => {
       const id = selected.id.replace('docker-', '');
       try {
         await localBackend.stopContainer(id);
-        alert('Conteneur arrêté !');
+        addNotification({
+          message: 'Conteneur arrêté !',
+          severity: 'success',
+          source: 'docker',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors de l\'arrêt');
+        addNotification({
+          message: e.message || 'Erreur lors de l\'arrêt',
+          severity: 'error',
+          source: 'docker',
+        });
       }
     } else if (selected.id.startsWith('k8s-')) {
       // Pour K8s, on arrête le pod (delete)
       const pod = selected.id.replace('k8s-', '');
       try {
         await localBackend.deletePod(pod, 'default');
-        alert('Pod arrêté (supprimé) !');
+        addNotification({
+          message: 'Pod arrêté (supprimé) !',
+          severity: 'success',
+          source: 'k8s',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors de l\'arrêt du pod');
+        addNotification({
+          message: e.message || 'Erreur lors de l\'arrêt du pod',
+          severity: 'error',
+          source: 'k8s',
+        });
       }
     }
   };
@@ -185,18 +219,34 @@ const InfraGraph: React.FC = () => {
       const id = selected.id.replace('docker-', '');
       try {
         await localBackend.removeContainer(id);
-        alert('Conteneur supprimé !');
+        addNotification({
+          message: 'Conteneur supprimé !',
+          severity: 'success',
+          source: 'docker',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors de la suppression');
+        addNotification({
+          message: e.message || 'Erreur lors de la suppression',
+          severity: 'error',
+          source: 'docker',
+        });
       }
     } else if (selected.id.startsWith('k8s-')) {
       // Pour K8s, suppression du pod
       const pod = selected.id.replace('k8s-', '');
       try {
         await localBackend.deletePod(pod, 'default');
-        alert('Pod supprimé !');
+        addNotification({
+          message: 'Pod supprimé !',
+          severity: 'success',
+          source: 'k8s',
+        });
       } catch (e: any) {
-        alert(e.message || 'Erreur lors de la suppression du pod');
+        addNotification({
+          message: e.message || 'Erreur lors de la suppression du pod',
+          severity: 'error',
+          source: 'k8s',
+        });
       }
     }
   };
