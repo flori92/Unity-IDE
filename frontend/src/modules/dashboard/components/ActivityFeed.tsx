@@ -1,4 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { TextField, InputAdornment } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+// ...imports inchangés...
+import { localBackend } from '../../../services/localBackendService';
 import {
   Box,
   List,
@@ -40,101 +44,61 @@ const ActivityFeed: React.FC = () => {
   const theme = useTheme();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filter, setFilter] = useState<string>('all');
+  const [search, setSearch] = useState('');
 
+  // Agrégation temps réel des événements Docker, K8s, Ansible
   useEffect(() => {
-    // Generate mock activities
-    const mockActivities: Activity[] = [
-      {
-        id: '1',
-        type: 'docker',
-        action: 'Container Started',
-        message: 'nginx container started successfully',
-        status: 'success',
-        timestamp: new Date(Date.now() - 2 * 60000),
-        user: 'admin',
-      },
-      {
-        id: '2',
-        type: 'kubernetes',
-        action: 'Pod Deployed',
-        message: 'Deployed app-pod-1 to production namespace',
-        status: 'success',
-        timestamp: new Date(Date.now() - 5 * 60000),
-        details: 'Image: app:v2.1.0',
-      },
-      {
-        id: '3',
-        type: 'ansible',
-        action: 'Playbook Executed',
-        message: 'site.yml completed with warnings',
-        status: 'warning',
-        timestamp: new Date(Date.now() - 10 * 60000),
-        user: 'devops',
-        details: '2 changed, 1 skipped',
-      },
-      {
-        id: '4',
-        type: 'workflow',
-        action: 'Pipeline Failed',
-        message: 'CI/CD pipeline failed at test stage',
-        status: 'error',
-        timestamp: new Date(Date.now() - 15 * 60000),
-        details: 'Unit tests failed: 3/45',
-      },
-      {
-        id: '5',
-        type: 'docker',
-        action: 'Image Built',
-        message: 'Built image backend:latest',
-        status: 'info',
-        timestamp: new Date(Date.now() - 20 * 60000),
-        user: 'ci-bot',
-      },
-      {
-        id: '6',
-        type: 'kubernetes',
-        action: 'Service Updated',
-        message: 'Updated app-service configuration',
-        status: 'info',
-        timestamp: new Date(Date.now() - 25 * 60000),
-      },
-      {
-        id: '7',
-        type: 'system',
-        action: 'High CPU Alert',
-        message: 'CPU usage exceeded 80% threshold',
-        status: 'warning',
-        timestamp: new Date(Date.now() - 30 * 60000),
-        details: 'Current: 85%',
-      },
-      {
-        id: '8',
-        type: 'ansible',
-        action: 'Inventory Updated',
-        message: 'Added 3 new hosts to production inventory',
-        status: 'success',
-        timestamp: new Date(Date.now() - 35 * 60000),
-        user: 'admin',
-      },
-    ];
+    // Mapping des événements en Activity
+    const mapDockerLog = (data: any): Activity => ({
+      id: `docker-${data.id || Date.now()}`,
+      type: 'docker',
+      action: data.action || 'Docker Event',
+      message: data.message || data.log || JSON.stringify(data),
+      status: data.status || 'info',
+      timestamp: new Date(data.timestamp || Date.now()),
+      user: data.user || 'system',
+      details: data.details,
+    });
+    const mapK8sEvent = (data: any): Activity => ({
+      id: `k8s-${data.uid || data.id || Date.now()}`,
+      type: 'kubernetes',
+      action: data.reason || data.action || 'K8s Event',
+      message: data.message || data.note || JSON.stringify(data),
+      status: data.type === 'Warning' ? 'warning' : 'info',
+      timestamp: new Date(data.timestamp || data.eventTime || Date.now()),
+      user: data.reportingComponent || data.user || 'system',
+      details: data.details,
+    });
+    const mapAnsibleExec = (data: any): Activity => ({
+      id: `ansible-${data.id || Date.now()}`,
+      type: 'ansible',
+      action: data.play || data.action || 'Ansible Exec',
+      message: data.msg || data.message || JSON.stringify(data),
+      status: data.status || (data.failed ? 'error' : 'success'),
+      timestamp: new Date(data.timestamp || Date.now()),
+      user: data.user || 'system',
+      details: data.details,
+    });
 
-    setActivities(mockActivities);
+    // Abonnements WebSocket
+    const unsubDocker = localBackend.subscribeToDockerLogs((data) => {
+      const activity = mapDockerLog(data);
+      setActivities(prev => [activity, ...prev].slice(0, 50));
+    });
+    const unsubK8s = localBackend.subscribeToK8sEvents((data) => {
+      const activity = mapK8sEvent(data);
+      setActivities(prev => [activity, ...prev].slice(0, 50));
+    });
+    const unsubAnsible = localBackend.subscribeToAnsibleExec((data) => {
+      const activity = mapAnsibleExec(data);
+      setActivities(prev => [activity, ...prev].slice(0, 50));
+    });
 
-    // Simulate real-time updates
-    const interval = setInterval(() => {
-      const newActivity: Activity = {
-        id: `new-${Date.now()}`,
-        type: ['docker', 'kubernetes', 'ansible', 'workflow', 'system'][Math.floor(Math.random() * 5)] as Activity['type'],
-        action: 'New Activity',
-        message: 'A new activity has occurred',
-        status: ['success', 'error', 'warning', 'info'][Math.floor(Math.random() * 4)] as Activity['status'],
-        timestamp: new Date(),
-        user: 'system',
-      };
-      setActivities(prev => [newActivity, ...prev].slice(0, 20));
-    }, 30000); // Add new activity every 30 seconds
-
-    return () => clearInterval(interval);
+    return () => {
+      unsubDocker();
+      unsubK8s();
+      unsubAnsible();
+    };
   }, []);
 
   const getIcon = (type: Activity['type']) => {
@@ -166,26 +130,39 @@ const ActivityFeed: React.FC = () => {
   };
 
 
+  // UX : timestamp lisible, FR, tooltip si > 1j
   const formatTimestamp = (timestamp: Date) => {
     const now = new Date();
     const diff = now.getTime() - timestamp.getTime();
     const minutes = Math.floor(diff / 60000);
-
-    if (minutes < 1) return 'Just now';
-    if (minutes < 60) return `${minutes}m ago`;
+    if (minutes < 1) {
+      return 'À l’instant';
+    }
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours}h ago`;
+    if (hours < 24) {
+      return `${hours}h`;
+    }
     const days = Math.floor(hours / 24);
-    return `${days}d ago`;
+    return `${days}j`;
   };
 
-  const filteredActivities = filter === 'all' 
-    ? activities 
-    : activities.filter(a => a.type === filter);
+  const filteredActivities = activities.filter(a => {
+    const typeOk = filter === 'all' || a.type === filter;
+    const searchOk =
+      !search ||
+      a.action.toLowerCase().includes(search.toLowerCase()) ||
+      a.message.toLowerCase().includes(search.toLowerCase()) ||
+      (a.user && a.user.toLowerCase().includes(search.toLowerCase())) ||
+      (a.details && a.details.toLowerCase().includes(search.toLowerCase()));
+    return typeOk && searchOk;
+  });
 
   return (
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, gap: 2 }}>
         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
           <Chip
             label="All"
@@ -206,6 +183,20 @@ const ActivityFeed: React.FC = () => {
             />
           ))}
         </Box>
+        <TextField
+          size="small"
+          placeholder="Rechercher..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ minWidth: 180 }}
+        />
         <IconButton size="small">
           <RefreshIcon />
         </IconButton>
@@ -252,7 +243,7 @@ const ActivityFeed: React.FC = () => {
                     <Typography variant="body2" fontWeight={500}>
                       {activity.action}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" title={activity.timestamp.toLocaleString('fr-FR')}>
                       {formatTimestamp(activity.timestamp)}
                     </Typography>
                   </Box>

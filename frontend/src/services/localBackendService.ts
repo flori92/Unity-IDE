@@ -1,20 +1,3 @@
-  /**
-   * Get all workflows (CI/CD pipelines)
-   */
-
-  /**
-   * Get system alerts (Monitoring)
-   */
-  /**
-   * Get all workflows (CI/CD pipelines)
-   */
-
-  /**
-   * Get system alerts (Monitoring)
-   */
-  /**
-   * Get system alerts (Monitoring)
-   */
 /**
  * Local Backend Service
  * Communicates with the local backend server that runs on the user's machine
@@ -117,6 +100,9 @@ class LocalBackendService {
   private ws: WebSocket | null = null;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private metricsCallbacks: Set<(data: MetricsData) => void> = new Set();
+  private dockerLogCallbacks: Set<(data: any) => void> = new Set();
+  private k8sEventCallbacks: Set<(data: any) => void> = new Set();
+  private ansibleExecCallbacks: Set<(data: any) => void> = new Set();
   private isConnected: boolean = false;
 
   /**
@@ -151,7 +137,7 @@ class LocalBackendService {
    * Get all Docker containers
    */
   async getContainers(): Promise<Container[]> {
-  const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/containers`);
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/containers`);
     if (!response.ok) {
       if (response.status === 503) {
         throw new Error('Docker is not running');
@@ -200,7 +186,7 @@ class LocalBackendService {
    * Get Docker images
    */
   async getImages(): Promise<any[]> {
-  const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/images`);
+    const response = await fetch(`${API_BASE_URL.replace('/v1','')}/docker/images`);
     if (!response.ok) {
       throw new Error('Failed to get images');
     }
@@ -273,27 +259,27 @@ class LocalBackendService {
     return response.json();
   }
 
-    /**
-     * Get all workflows (CI/CD pipelines)
-     */
-    async getWorkflows(): Promise<any> {
-      const response = await fetch(`${API_BASE_URL}/cicd/workflows`);
-      if (!response.ok) {
-        throw new Error('Failed to get workflows');
-      }
-      return response.json();
+  /**
+   * Get all workflows (CI/CD pipelines)
+   */
+  async getWorkflows(): Promise<any> {
+    const response = await fetch(`${API_BASE_URL}/cicd/workflows`);
+    if (!response.ok) {
+      throw new Error('Failed to get workflows');
     }
+    return response.json();
+  }
 
-    /**
-     * Get system alerts (Monitoring)
-     */
-    async getAlerts(): Promise<any[]> {
-      const response = await fetch(`${API_BASE_URL}/monitoring/alerts`);
-      if (!response.ok) {
-        throw new Error('Failed to get alerts');
-      }
-      return response.json();
+  /**
+   * Get system alerts (Monitoring)
+   */
+  async getAlerts(): Promise<any[]> {
+    const response = await fetch(`${API_BASE_URL}/monitoring/alerts`);
+    if (!response.ok) {
+      throw new Error('Failed to get alerts');
     }
+    return response.json();
+  }
 
   /**
    * Get container metrics
@@ -363,10 +349,38 @@ class LocalBackendService {
    */
   subscribeToMetrics(callback: (data: MetricsData) => void): () => void {
     this.metricsCallbacks.add(callback);
-    
-    // Return unsubscribe function
     return () => {
       this.metricsCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Subscribe to Docker logs (streaming)
+   */
+  subscribeToDockerLogs(callback: (data: any) => void): () => void {
+    this.dockerLogCallbacks.add(callback);
+    return () => {
+      this.dockerLogCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Subscribe to Kubernetes events (streaming)
+   */
+  subscribeToK8sEvents(callback: (data: any) => void): () => void {
+    this.k8sEventCallbacks.add(callback);
+    return () => {
+      this.k8sEventCallbacks.delete(callback);
+    };
+  }
+
+  /**
+   * Subscribe to Ansible executions (streaming)
+   */
+  subscribeToAnsibleExec(callback: (data: any) => void): () => void {
+    this.ansibleExecCallbacks.add(callback);
+    return () => {
+      this.ansibleExecCallbacks.delete(callback);
     };
   }
 
@@ -375,20 +389,19 @@ class LocalBackendService {
   private handleWebSocketMessage(message: any): void {
     switch (message.type) {
       case 'metrics':
-        this.metricsCallbacks.forEach(callback => {
-          callback(message.data);
-        });
+        this.metricsCallbacks.forEach(cb => cb(message.payload || message.data));
         break;
-      case 'docker-event':
-        // Handle Docker events
-        console.log('Docker event:', message.data);
+      case 'docker-log':
+        this.dockerLogCallbacks.forEach(cb => cb(message.payload));
         break;
       case 'k8s-event':
-        // Handle Kubernetes events
-        console.log('Kubernetes event:', message.data);
+        this.k8sEventCallbacks.forEach(cb => cb(message.payload));
+        break;
+      case 'ansible-exec':
+        this.ansibleExecCallbacks.forEach(cb => cb(message.payload));
         break;
       default:
-        console.log('Unknown message type:', message.type);
+        console.log('Unknown message type:', message.type, message);
     }
   }
 
@@ -426,7 +439,9 @@ class LocalBackendService {
    */
   async getProxyStatus(): Promise<ProxyStatus> {
     const res = await fetch(`${API_BASE_URL}/proxy/status`);
-  if (!res.ok) { throw new Error('Failed to get proxy status'); }
+    if (!res.ok) {
+      throw new Error('Failed to get proxy status');
+    }
     return res.json();
   }
 
@@ -435,7 +450,9 @@ class LocalBackendService {
    */
   async getProxyHosts(): Promise<ProxyHost[]> {
     const res = await fetch(`${API_BASE_URL}/proxy/hosts`);
-  if (!res.ok) { throw new Error('Failed to get proxy hosts'); }
+    if (!res.ok) {
+      throw new Error('Failed to get proxy hosts');
+    }
     return res.json();
   }
 
@@ -446,7 +463,9 @@ class LocalBackendService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(host),
     });
-  if (!res.ok) { throw new Error('Failed to create proxy host'); }
+    if (!res.ok) {
+      throw new Error('Failed to create proxy host');
+    }
     return res.json();
   }
 
@@ -457,36 +476,48 @@ class LocalBackendService {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(host),
     });
-  if (!res.ok) { throw new Error('Failed to update proxy host'); }
+    if (!res.ok) {
+      throw new Error('Failed to update proxy host');
+    }
   }
 
   /** Delete a proxy host */
   async deleteProxyHost(id: string): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/proxy/hosts/${id}`, { method: 'DELETE' });
-  if (!res.ok) { throw new Error('Failed to delete proxy host'); }
+    if (!res.ok) {
+      throw new Error('Failed to delete proxy host');
+    }
   }
 
   /** Apply configs (generate and reload) */
   async applyProxyConfig(): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/proxy/apply`, { method: 'POST' });
-  if (!res.ok) { throw new Error('Failed to apply proxy config'); }
+    if (!res.ok) {
+      throw new Error('Failed to apply proxy config');
+    }
   }
 
   /** Hot reload nginx */
   async reloadProxy(): Promise<void> {
     const res = await fetch(`${API_BASE_URL}/proxy/reload`, { method: 'POST' });
-  if (!res.ok) { throw new Error('Failed to reload proxy'); }
+    if (!res.ok) {
+      throw new Error('Failed to reload proxy');
+    }
   }
 
   /** Get proxy logs */
   async getProxyLogs(): Promise<string> {
     const res = await fetch(`${API_BASE_URL}/proxy/logs`);
-  if (!res.ok) { throw new Error('Failed to get proxy logs'); }
+    if (!res.ok) {
+      throw new Error('Failed to get proxy logs');
+    }
     return res.text();
   }
 
   private calculateAge(timestamp: string): string {
-  if (!timestamp) { return 'unknown'; }
+    if (!timestamp) {
+      return 'unknown';
+    }
     
     const created = new Date(timestamp);
     const now = new Date();
@@ -496,8 +527,12 @@ class LocalBackendService {
     const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
     
-  if (days > 0) { return `${days}d`; }
-  if (hours > 0) { return `${hours}h`; }
+    if (days > 0) {
+      return `${days}d`;
+    }
+    if (hours > 0) {
+      return `${hours}h`;
+    }
     return `${minutes}m`;
   }
 }

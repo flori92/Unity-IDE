@@ -1,0 +1,2 @@
+// This file is disabled to avoid conflicts with main.go
+// It contains a duplicate implementation that was causing compilation issues

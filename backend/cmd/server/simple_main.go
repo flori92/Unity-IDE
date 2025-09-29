@@ -1,4 +1,57 @@
 // Fichier désactivé pour éviter les doublons avec main.go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/rs/cors"
+	"github.com/sirupsen/logrus"
+)
+
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+type Hub struct {
+	clients    map[*Client]bool
+	broadcast  chan []byte
+	register   chan *Client
+	unregister chan *Client
+}
+
+type Client struct {
+	hub  *Hub
+	conn *websocket.Conn
+	send chan []byte
+}
+
+func newHub() *Hub {
+	return &Hub{
+		broadcast:  make(chan []byte),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
+		clients:    make(map[*Client]bool),
+	}
+}
+
+func (h *Hub) run() {
+	for {
+		select {
+		case client := <-h.register:
+			h.clients[client] = true
+			logrus.Infof("Client connected. Total clients: %d", len(h.clients))
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
 				close(client.send)
 				logrus.Infof("Client disconnected. Total clients: %d", len(h.clients))

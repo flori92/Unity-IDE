@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
-// ...import principal déjà présent en haut du fichier...
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
+import './styles/globals.css';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools/production';
 import { SnackbarProvider } from 'notistack';
 import { useThemeStore } from './store/themeStore';
+import AnimatedLoader from './components/AnimatedLoader';
+import ThemeSettings from './modules/settings/ThemeSettings';
+import NotificationCenter from './components/NotificationCenter';
 import { useConnectionStore } from './store/connectionStore';
 import { useNotificationStore } from './store/notificationStore';
 
@@ -75,7 +78,7 @@ function Terminal() {
     <div className="terminal">
       <h3>Terminal intégré</h3>
       <div className="terminal-output">
-  {output.map((line: string, i: number) => <div key={i}>{line}</div>)}
+        {output.map((line: string, i: number) => <div key={i}>{line}</div>)}
       </div>
       <input
         type="text"
@@ -117,8 +120,8 @@ function DockerModule() {
 
   async function handleStart(id: string) {
     try {
-  await localBackend.startContainer(id);
-  setContainers(await localBackend.getContainers());
+      await localBackend.startContainer(id);
+      setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur démarrage');
     }
@@ -126,14 +129,14 @@ function DockerModule() {
 
   async function handleStop(id: string) {
     try {
-  await localBackend.stopContainer(id);
-  setContainers(await localBackend.getContainers());
+      await localBackend.stopContainer(id);
+      setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur arrêt');
     }
   }
 
-  if (loading) return <div>Chargement Docker...</div>;
+  if (loading) return <AnimatedLoader text="Chargement Docker..." />;
   if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
 
   return (
@@ -203,7 +206,7 @@ function CICDModule() {
     fetchWorkflows();
   }, []);
 
-  if (loading) return <div>Chargement CI/CD...</div>;
+  if (loading) return <AnimatedLoader text="Chargement CI/CD..." />;
   if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
 
   return (
@@ -254,7 +257,7 @@ function MonitoringModule() {
     fetchMonitoring();
   }, []);
 
-  if (loading) return <div>Chargement Monitoring...</div>;
+  if (loading) return <AnimatedLoader text="Chargement Monitoring..." />;
   if (error) return <div style={{color:'red'}}>Erreur : {error}</div>;
 
   return (
@@ -447,8 +450,11 @@ function App() {
           }}
         >
           <div className="app-container">
+            <div style={{ position: 'fixed', top: 12, right: 24, zIndex: 2000 }}>
+              <NotificationCenter />
+            </div>
             <div className="main-layout">
-              <aside className="sidebar">
+              <aside className="sidebar" role="navigation" aria-label="Navigation principale">
                 <ul>
                   {['Dashboard', 'Projets', 'Docker', 'Kubernetes', 'Ansible', 'CI/CD', 'Monitoring', 'Extensions', 'Paramètres'].map((m) => (
                     <li key={m} className={selectedModule === m ? 'active' : ''} onClick={() => handleModuleSelect(m)}>
@@ -457,19 +463,35 @@ function App() {
                   ))}
                 </ul>
               </aside>
-              <main className="main-content">
-                {selectedModule === 'Dashboard' && (
-                  <div className="dashboard-placeholder">
-                    <h2>Dashboard</h2>
-                    <p>Bienvenue sur le tableau de bord Unity DevOps IDE.</p>
-                  </div>
-                )}
-                {selectedModule === 'Projets' && <FileExplorer />}
-                {selectedModule === 'Terminal' && <Terminal />}
-                {selectedModule === 'Docker' && <DockerModule />}
-                {selectedModule === 'CI/CD' && <CICDModule />}
-                {selectedModule === 'Monitoring' && <MonitoringModule />}
-                {/* Modules à venir : Monitoring, etc. */}
+              <main className="main-content" style={{ position: 'relative', minHeight: 400 }} role="main" aria-live="polite">
+                <div
+                  key={selectedModule}
+                  style={{
+                    animation: 'fadein 0.5s',
+                    position: 'absolute',
+                    width: '100%',
+                  }}
+                >
+                  {selectedModule === 'Dashboard' && (
+                    <div className="dashboard-placeholder">
+                      <h2>Dashboard</h2>
+                      <p>Bienvenue sur le tableau de bord Unity DevOps IDE.</p>
+                    </div>
+                  )}
+                  {selectedModule === 'Projets' && <FileExplorer />}
+                  {selectedModule === 'Terminal' && <Terminal />}
+                  {selectedModule === 'Docker' && <DockerModule />}
+                  {selectedModule === 'CI/CD' && <CICDModule />}
+                  {selectedModule === 'Monitoring' && <MonitoringModule />}
+                  {selectedModule === 'Paramètres' && <ThemeSettings />}
+                  {/* Modules à venir : Monitoring, etc. */}
+                </div>
+                <style>{`
+                  @keyframes fadein {
+                    from { opacity: 0; transform: translateY(16px); }
+                    to { opacity: 1; transform: none; }
+                  }
+                `}</style>
               </main>
             </div>
             <footer className="footer">
