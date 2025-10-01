@@ -86,18 +86,9 @@ const mockSystemInfo: SystemInfo = {
   k8sVersion: 'v1.28.3',
 };
 
-const mockSystemMetrics: SystemMetrics = {
-  cpu: Math.random() * 100,
-  memory: Math.random() * 100,
-  disk: Math.random() * 100,
-  network: {
-    rx: Math.random() * 1000,
-    tx: Math.random() * 1000,
-  },
-};
+// mockSystemMetrics retiré car non utilisé - les métriques sont générées dynamiquement
 
 class MockBackendService {
-  private ws: WebSocket | null = null;
   private intervalId: number | null = null;
   private metricsCallbacks: Array<(data: any) => void> = [];
   private k8sEventCallbacks: Array<(data: any) => void> = [];
@@ -231,7 +222,7 @@ class MockBackendService {
     console.log(`[MOCK] Removing container ${id}`);
   }
 
-  async getContainerLogs(id: string, lines: number): Promise<LogsResult> {
+  async getContainerLogs(_id: string, _lines: number): Promise<LogsResult> {
     await this.delay(400);
     return {
       logs: [
@@ -251,32 +242,32 @@ class MockBackendService {
     };
   }
 
-  async getPods(namespace: string = 'default'): Promise<Pod[]> {
+  async getPods(_namespace: string = 'default'): Promise<Pod[]> {
     await this.delay(300);
     return mockPods;
   }
 
-  async getServices(namespace: string = 'default'): Promise<Service[]> {
+  async getServices(_namespace: string = 'default'): Promise<Service[]> {
     await this.delay(300);
     return mockServices;
   }
 
-  async deletePod(name: string, namespace: string): Promise<void> {
+  async deletePod(name: string, _namespace: string): Promise<void> {
     await this.delay(500);
-    console.log(`[MOCK] Deleting pod ${name} in namespace ${namespace}`);
+    console.log(`[MOCK] Deleting pod ${name} in namespace ${_namespace}`);
   }
 
-  async scaleDeployment(name: string, namespace: string, replicas: number): Promise<void> {
+  async scaleDeployment(name: string, _namespace: string, replicas: number): Promise<void> {
     await this.delay(700);
     console.log(`[MOCK] Scaling deployment ${name} to ${replicas} replicas`);
   }
 
-  async rollingRestartDeployment(name: string, namespace: string): Promise<void> {
+  async rollingRestartDeployment(name: string, _namespace: string): Promise<void> {
     await this.delay(800);
     console.log(`[MOCK] Rolling restart for deployment ${name}`);
   }
 
-  async getPodLogs(namespace: string, pod: string, container: string, lines: number): Promise<LogsResult> {
+  async getPodLogs(_namespace: string, _pod: string, _container: string, _lines: number): Promise<LogsResult> {
     await this.delay(400);
     return {
       logs: [
@@ -287,7 +278,7 @@ class MockBackendService {
     };
   }
 
-  async execK8sCommand(namespace: string, pod: string, container: string, command: string[]): Promise<CommandResult> {
+  async execK8sCommand(_namespace: string, pod: string, _container: string, command: string[]): Promise<CommandResult> {
     await this.delay(600);
     return {
       output: `Mock output for K8s command: ${command.join(' ')}\nPod: ${pod}`,
