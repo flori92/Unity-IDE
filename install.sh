@@ -143,10 +143,16 @@ build_backend() {
 
     cd backend
 
-    # Clean and build
+    # Clean and build with simplified main
     go mod tidy
-    go mod vendor
-    go build -mod=vendor -o ../bin/server cmd/server/main.go
+    
+    # Use simplified version if packages don't exist
+    if [ ! -d "pkg/docker" ] || [ ! -d "pkg/kubernetes" ] || [ ! -d "pkg/ansible" ]; then
+        log "Using simplified backend (full packages not yet implemented)"
+        go build -o ../bin/server cmd/server/main_simple.go
+    else
+        go build -o ../bin/server cmd/server/main.go
+    fi
 
     if [[ ! -f "../bin/server" ]]; then
         error "Backend build failed"
