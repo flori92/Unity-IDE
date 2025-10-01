@@ -166,6 +166,9 @@ build_frontend() {
     local current_dir=$(pwd)
     cd frontend
 
+    # Clean any existing node_modules and lock files
+    rm -rf node_modules package-lock.json
+    
     # Install dependencies (with legacy peer deps for compatibility)
     npm install --legacy-peer-deps
 
