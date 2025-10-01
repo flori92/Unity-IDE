@@ -1,13 +1,13 @@
 # 🗺️ Roadmap - Unity DevOps IDE
 
-**Version Actuelle** : 2.0.0  
+**Première Release Prévue** : Février 2026  
 **Dernière Mise à Jour** : 2025-10-01
 
 ---
 
-## 📊 **État Actuel - Version 2.0.0** ✅
+## 📊 **État Actuel - Phase 1 (Fondations)** ✅
 
-### **✅ Complété (100%)**
+### **✅ Completé (100% de la Phase 1)**
 
 #### **Infrastructure de Base**
 - [x] Backend Go avec API REST
@@ -57,228 +57,289 @@
 
 ---
 
-## 🎯 **Prochaines Versions**
+## 🎯 **Scope v1.0.0 - Prochaines Phases**
 
-### **Version 2.1.0 - Intégration Backend** (1-2 semaines)
+### **Phase 2 - Extensions Marketplace Enrichi** (Novembre 2025)
 
-#### **Connexion APIs** 🔄
-- [ ] Connecter Docker API au backend
-- [ ] Connecter Kubernetes API au backend
-- [ ] Connecter Ansible API au backend
-- [ ] WebSocket pour logs temps réel
-- [ ] Refresh automatique des données
+#### **Extensions Marketplace** 🔄
+- [ ] 20+ extensions disponibles
+  - [x] AWS Toolkit
+  - [x] Terraform
+  - [x] Helm Charts
+  - [x] Azure DevOps
+  - [x] Google Cloud Tools
+  - [ ] Jenkins Integration
+  - [ ] GitLab CI/CD
+  - [ ] Prometheus Monitoring
+  - [ ] Grafana Dashboards
+  - [ ] ArgoCD
+  - [ ] Flux CD
+  - [ ] Istio Service Mesh
+  - [ ] Vault Secrets
+  - [ ] Datadog
+  - [ ] New Relic
+  - [ ] Sentry
+  - [ ] Slack Integration
+  - [ ] Discord Integration
+  - [ ] Jira Integration
+  - [ ] Confluence
 
-#### **Actions Temps Réel** 🔄
-- [ ] Start/Stop containers (Docker)
-- [ ] Scale deployments (Kubernetes)
-- [ ] Run playbooks (Ansible)
-- [ ] Logs streaming
-- [ ] Exec dans containers
+#### **Extension API** 🔄
+- [ ] API publique pour développeurs
+- [ ] SDK TypeScript
+- [ ] Documentation développeur
+- [ ] Exemples d'extensions
+- [ ] Marketplace submission process
 
-#### **Tests** 🔄
-- [ ] Tests unitaires backend
-- [ ] Tests unitaires frontend
-- [ ] Tests d'intégration
-- [ ] Tests E2E
-
-**Priorité** : 🔥 HAUTE  
-**Effort** : 2 semaines  
-**Impact** : Fonctionnalités pleinement opérationnelles
-
----
-
-### **Version 2.2.0 - Command Palette & Shortcuts** (1 semaine)
-
-#### **Command Palette** 📋
-- [ ] Ctrl+Shift+P : Ouvrir palette
-- [ ] Recherche fuzzy
-- [ ] Commandes Docker/K8s/Ansible
-- [ ] Historique des commandes
-- [ ] Favoris
-
-#### **Quick Open** 📋
-- [ ] Ctrl+P : Quick Open
-- [ ] Recherche fichiers
-- [ ] Recherche containers/pods
-- [ ] Navigation rapide
-
-#### **Raccourcis Clavier** 📋
-- [ ] Ctrl+` : Toggle terminal
-- [ ] Ctrl+B : Toggle sidebar
-- [ ] Ctrl+J : Toggle panel
-- [ ] Ctrl+K Ctrl+T : Changer thème
-- [ ] Personnalisation keybindings
-
-**Priorité** : 🟡 MOYENNE  
-**Effort** : 1 semaine  
-**Impact** : Productivité utilisateur
-
----
-
-### **Version 2.3.0 - Git Integration** (1-2 semaines)
-
-#### **Fonctionnalités Git** 🔄
-- [ ] Source Control view
-- [ ] Diff viewer
-- [ ] Commit/Push/Pull
-- [ ] Branch management
-- [ ] Merge conflicts
-- [ ] Git history
-- [ ] Blame annotations
-
-#### **GitHub Integration** 🔄
-- [ ] Pull Requests
-- [ ] Issues
-- [ ] Actions (CI/CD)
-- [ ] Notifications
-
-**Priorité** : 🟡 MOYENNE  
-**Effort** : 2 semaines  
-**Impact** : Workflow DevOps complet
-
----
-
-### **Version 2.4.0 - Settings & Themes** (1 semaine)
-
-#### **Settings UI** ⚙️
-- [ ] Interface de configuration
-- [ ] Préférences utilisateur
-- [ ] Configuration Docker/K8s/Ansible
-- [ ] Keybindings editor
-- [ ] Import/Export settings
-
-#### **Thèmes** 🎨
-- [ ] Light theme
-- [ ] High contrast theme
-- [ ] Custom themes
-- [ ] Theme marketplace
-- [ ] Icon themes
-
-**Priorité** : 🟢 BASSE  
-**Effort** : 1 semaine  
-**Impact** : Personnalisation
-
----
-
-### **Version 3.0.0 - Extensions Marketplace** (2-3 semaines)
-
-#### **Marketplace** 🔌
-- [ ] Extensions store
-- [ ] Recherche/Filtres
-- [ ] Installation/Désinstallation
-- [ ] Auto-updates
-- [ ] Ratings & Reviews
-
-#### **Extension API** 🔌
-- [ ] API pour développeurs
-- [ ] Documentation API
-- [ ] Templates d'extensions
-- [ ] CLI pour créer extensions
-- [ ] Publishing workflow
-
-#### **Extensions Officielles** 🔌
-- [ ] AWS Extension
-- [ ] Azure Extension
-- [ ] GCP Extension
-- [ ] Terraform Extension
-- [ ] Helm Extension
+#### **Extension Features** 🔄
+- [ ] Install/Uninstall/Update
+- [ ] Auto-update
+- [ ] Extension settings
+- [ ] Extension dependencies
+- [ ] Extension ratings & reviews
 
 **Priorité** : 🔥 HAUTE  
-**Effort** : 3 semaines  
+**Effort** : 1 mois  
 **Impact** : Écosystème extensible
 
 ---
 
-### **Version 3.1.0 - AI Copilot** (3-4 semaines)
+### **Phase 3 - AI Copilot** (Novembre-Décembre 2025)
 
-#### **Assistant IA** 🤖
-- [ ] Chat IA intégré
-- [ ] Suggestions de code
-- [ ] Auto-fix erreurs
-- [ ] Génération Dockerfile
-- [ ] Génération K8s manifests
-- [ ] Génération playbooks Ansible
-- [ ] Optimisations intelligentes
+#### **Chat AI Intégré** 🤖
+- [ ] Chat AI dans sidebar
+- [ ] Natural language commands
+- [ ] Context-aware suggestions
+- [ ] Multi-model support (GPT-4, Claude, Ollama)
 
-#### **Prédictions** 🤖
-- [ ] Prédiction de capacité
-- [ ] Détection d'anomalies
-- [ ] Recommandations de scaling
-- [ ] Analyse de coûts
+#### **Code Suggestions** 🤖
+- [ ] Dockerfile autocomplete
+- [ ] Kubernetes YAML suggestions
+- [ ] Ansible syntax help
+- [ ] Git commit message suggestions
+
+#### **Docker/K8s Recommendations** 🤖
+- [ ] Container optimization tips
+- [ ] Resource recommendations
+- [ ] Security best practices
+- [ ] Cost optimization
+
+#### **Smart Debugging** 🤖
+- [ ] Container crash analysis
+- [ ] Pod failure diagnosis
+- [ ] Network issues detection
+- [ ] Error auto-fix suggestions
 
 **Priorité** : 🔥 HAUTE  
-**Effort** : 4 semaines  
+**Effort** : 1.5 mois  
 **Impact** : Révolutionnaire
 
 ---
 
-### **Version 3.2.0 - Collaboration** (2-3 semaines)
+### **Phase 4 - Collaboration Temps Réel** (Décembre 2025)
 
-#### **Temps Réel** 👥
-- [ ] Partage de sessions
-- [ ] Pair programming
-- [ ] Chat intégré
-- [ ] Curseurs multiples
-- [ ] Annotations partagées
+#### **Multi-User Editing** 👥
+- [ ] Google Docs style editing
+- [ ] Cursor tracking en temps réel
+- [ ] Conflict resolution
+- [ ] History & replay
 
 #### **Team Features** 👥
+- [ ] Chat intégré par projet
+- [ ] Voice/Video calls (optionnel)
+- [ ] Screen sharing
 - [ ] Workspaces partagés
-- [ ] Permissions & Roles
-- [ ] Activity feed
-- [ ] Notifications
-- [ ] Intégration Slack/Discord
+- [ ] Permissions granulaires (read/write/admin)
+- [ ] Activity feed (qui fait quoi)
+- [ ] Code reviews intégrées
+- [ ] Pair programming mode
 
-**Priorité** : 🟡 MOYENNE  
-**Effort** : 3 semaines  
-**Impact** : Travail d'équipe
+#### **Real-time Sync** 👥
+- [ ] WebSocket connections
+- [ ] Offline mode avec sync
+- [ ] CRDT (Conflict-free Replicated Data Types)
+
+**Priorité** : 🔥 HAUTE  
+**Effort** : 1 mois  
+**Impact** : Travail d'équipe révolutionnaire
 
 ---
 
-### **Version 4.0.0 - Cloud & Remote** (4-6 semaines)
+### **Phase 5 - Cloud Sync** (Décembre 2025)
 
-#### **Cloud Sync** ☁️
-- [ ] Settings sync
+#### **Cloud Storage** ☁️
+- [ ] Settings sync entre devices
 - [ ] Extensions sync
-- [ ] Workspaces sync
-- [ ] Snippets sync
 - [ ] Keybindings sync
+- [ ] Workspaces backup
+- [ ] Git credentials vault
 
-#### **Remote Development** ☁️
+#### **Cloud Providers** ☁️
+- [ ] Unity Cloud (gratuit 5GB)
+- [ ] AWS S3 integration
+- [ ] Google Cloud Storage
+- [ ] Azure Blob Storage
+- [ ] Self-hosted option
+
+#### **Sync Features** ☁️
+- [ ] Auto-sync en background
+- [ ] Selective sync
+- [ ] Encryption end-to-end
+- [ ] Version history
+- [ ] Restore points
+
+**Priorité** : 🟡 MOYENNE  
+**Effort** : 1 mois  
+**Impact** : Multi-device seamless
+
+---
+
+### **Phase 6 - Tests & Optimisation** (Janvier 2026)
+
+#### **Tests E2E** 🧪
+- [ ] Tests E2E complets (Playwright)
+- [ ] Tests d'intégration
+- [ ] Tests de performance
+- [ ] Tests de sécurité
+- [ ] Tests multi-OS
+
+#### **Performance Optimization** ⚡
+- [ ] Bundle size optimization
+- [ ] Lazy loading
+- [ ] Memory optimization
+- [ ] Startup time < 2s
+- [ ] RAM usage < 200 MB
+
+#### **Security Audit** 🔒
+- [ ] Security audit complet
+- [ ] Vulnerability scanning
+- [ ] Penetration testing
+- [ ] Compliance checks (SOC2, GDPR)
+
+#### **Documentation Finale** 📚
+- [ ] User documentation
+- [ ] Developer documentation
+- [ ] API documentation
+- [ ] Video tutorials
+- [ ] Migration guides
+
+**Priorité** : 🔥 HAUTE  
+**Effort** : 1 mois  
+**Impact** : Production ready
+
+---
+
+### **Phase 7 - Beta Testing & Release** (Février 2026)
+
+#### **Beta Programme** 🧪
+- [ ] Beta testers recruitment (100+ users)
+- [ ] Feedback collection
+- [ ] Bug fixes prioritization
+- [ ] Performance monitoring
+- [ ] User analytics
+
+#### **Release Candidates** 🚀
+- [ ] RC1 : Feature complete
+- [ ] RC2 : Bug fixes
+- [ ] RC3 : Final polish
+- [ ] Release notes
+- [ ] Migration guide
+
+#### **Launch** 🎉
+- [ ] v1.0.0 Release
+- [ ] GitHub Release
+- [ ] ProductHunt launch
+- [ ] HackerNews post
+- [ ] Social media campaign
+- [ ] Press release
+
+**Priorité** : 🔥 CRITIQUE  
+**Effort** : 1 mois  
+**Impact** : Go to market
+
+---
+
+---
+
+## 📅 **Timeline v1.0.0 Détaillée**
+
+### **Octobre 2025** (Mois 1) ✅
+- ✅ Phase 1 : Fondations (COMPLET)
+  - Interface VS Code
+  - Docker/Kubernetes/Ansible
+  - Git Integration
+  - Settings UI
+  - Extensions Marketplace (5 extensions)
+  - Command Palette + Quick Open
+  - Raccourcis clavier
+
+### **Novembre 2025** (Mois 2)
+- 🔄 Phase 2 : Extensions Marketplace (20+ extensions)
+- 🔄 Extension API & SDK
+- 🔄 Phase 3 : AI Copilot Phase 1
+  - Chat AI
+  - Code suggestions
+  - Docker/K8s recommendations
+
+### **Décembre 2025** (Mois 3)
+- 🔄 Phase 3 : AI Copilot Phase 2
+  - Smart debugging
+  - Error auto-fix
+- 🔄 Phase 4 : Collaboration temps réel
+  - Multi-user editing
+  - Chat intégré
+  - Workspaces partagés
+- 🔄 Phase 5 : Cloud Sync
+  - Settings/Extensions sync
+  - Cloud storage integration
+
+### **Janvier 2026** (Mois 4)
+- 🔄 Phase 6 : Tests & Optimisation
+  - Tests E2E complets
+  - Performance optimization
+  - Security audit
+  - Documentation finale
+
+### **Février 2026** (Release Month)
+- 🔄 Phase 7 : Beta Testing & Release
+  - Beta programme (100+ testers)
+  - Release Candidate 1
+  - Bug fixes
+  - Release Candidate 2
+  - 🚀 **RELEASE v1.0.0 FINALE**
+
+---
+
+## 🎯 **Roadmap Post v1.0.0**
+
+### **v1.1.0** (Q2 2026) - Remote Development
+
 - [ ] SSH Remote
 - [ ] Container Remote
 - [ ] WSL Remote
 - [ ] Kubernetes Remote
 - [ ] Cloud Remote (AWS/Azure/GCP)
+- [ ] Hot reload
+- [ ] Dev containers
 
-#### **Web Version** ☁️
-- [ ] Version web complète
-- [ ] PWA (Progressive Web App)
-- [ ] Mobile responsive
-- [ ] Offline mode
+### **v1.2.0** (Q3 2026) - Mobile & Tablet
+- [ ] Mobile app (iOS/Android)
+- [ ] Tablet support
+- [ ] Touch optimizations
+- [ ] Offline mode complet
+- [ ] Progressive Web App (PWA)
 
-**Priorité** : 🟡 MOYENNE  
-**Effort** : 6 semaines  
-**Impact** : Accessibilité universelle
+### **v2.0.0** (Q4 2026) - Enterprise
+- [ ] Multi-cloud management
+- [ ] Cost optimization AI
+- [ ] Security scanning
+- [ ] Compliance automation
+- [ ] SSO & SAML
+- [ ] Audit logs
+- [ ] SLA & Support
 
 ---
 
-## 📈 **Timeline Prévisionnel**
-
-```
-2025 Q4 (Oct-Dec)
-├── v2.1.0 - Intégration Backend      [2 semaines] ✅ En cours
-├── v2.2.0 - Command Palette          [1 semaine]
-├── v2.3.0 - Git Integration          [2 semaines]
-└── v2.4.0 - Settings & Themes        [1 semaine]
-
-2026 Q1 (Jan-Mar)
-├── v3.0.0 - Extensions Marketplace   [3 semaines]
-├── v3.1.0 - AI Copilot              [4 semaines]
-└── v3.2.0 - Collaboration           [3 semaines]
-
-2026 Q2 (Apr-Jun)
-└── v4.0.0 - Cloud & Remote          [6 semaines]
-```
 
 ---
 
