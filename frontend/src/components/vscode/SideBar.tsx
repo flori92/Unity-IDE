@@ -9,23 +9,20 @@ import ExplorerView from './views/ExplorerView';
 import DockerView from './views/DockerView';
 import KubernetesView from './views/KubernetesView';
 import AnsibleView from './views/AnsibleView';
+import SourceControlView from './views/SourceControlView';
+import ExtensionsView from './views/ExtensionsView';
+import SettingsView from './views/SettingsView';
+import AIChatView from './views/AIChatView';
 
 interface SideBarProps {
   activeView: string;
   width: number;
 }
-
 export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
   const renderView = () => {
     switch (activeView) {
       case 'explorer':
         return <ExplorerView />;
-      case 'docker':
-        return <DockerView />;
-      case 'kubernetes':
-        return <KubernetesView />;
-      case 'ansible':
-        return <AnsibleView />;
       case 'search':
         return (
           <Box sx={{ p: 2 }}>
@@ -35,21 +32,19 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
           </Box>
         );
       case 'source-control':
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Git integration coming soon...
-            </Typography>
-          </Box>
-        );
+        return <SourceControlView />;
+      case 'docker':
+        return <DockerView />;
+      case 'kubernetes':
+        return <KubernetesView />;
+      case 'ansible':
+        return <AnsibleView />;
       case 'extensions':
-        return (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              Extensions marketplace coming soon...
-            </Typography>
-          </Box>
-        );
+        return <ExtensionsView />;
+      case 'ai-chat':
+        return <AIChatView />;
+      case 'settings':
+        return <SettingsView />;
       default:
         return null;
     }
@@ -64,6 +59,7 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
       kubernetes: 'KUBERNETES',
       ansible: 'ANSIBLE',
       extensions: 'EXTENSIONS',
+      'ai-chat': 'AI COPILOT',
       settings: 'SETTINGS',
     };
     return titles[activeView] || 'UNITY DEVOPS IDE';
