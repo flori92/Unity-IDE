@@ -13,6 +13,8 @@ import SourceControlView from './views/SourceControlView';
 import ExtensionsView from './views/ExtensionsView';
 import SettingsView from './views/SettingsView';
 import AIChatView from './views/AIChatView';
+import CollabView from './views/CollabView';
+import ChatView from './views/ChatView';
 
 interface SideBarProps {
   activeView: string;
@@ -39,10 +41,14 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
         return <KubernetesView />;
       case 'ansible':
         return <AnsibleView />;
-      case 'extensions':
-        return <ExtensionsView />;
+      case 'collaboration':
+        return <CollabView />;
+      case 'team-chat':
+        return <ChatView />;
       case 'ai-chat':
         return <AIChatView />;
+      case 'extensions':
+        return <ExtensionsView />;
       case 'settings':
         return <SettingsView />;
       default:
@@ -58,6 +64,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
       docker: 'DOCKER',
       kubernetes: 'KUBERNETES',
       ansible: 'ANSIBLE',
+      collaboration: 'COLLABORATION',
+      'team-chat': 'TEAM CHAT',
       extensions: 'EXTENSIONS',
       'ai-chat': 'AI COPILOT',
       settings: 'SETTINGS',
