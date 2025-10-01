@@ -204,8 +204,7 @@ export function useSync(): UseSyncReturn {
   const sync = useCallback(async () => {
     setError(null);
     try {
-      const status = await syncService.sync();
-      return status;
+      return await syncService.sync();
     } catch (err: any) {
       setError(err.message);
       throw err;
