@@ -5,6 +5,8 @@ import TerminalIcon from '@mui/icons-material/Terminal';
 import DockerIcon from '@mui/icons-material/Computer';
 import K8sIcon from '@mui/icons-material/CloudQueue';
 import AnsibleIcon from '@mui/icons-material/PlayCircleOutline';
+import BugReportIcon from '@mui/icons-material/BugReport';
+import { useAI } from '../hooks/useAI';
 
 const CONTEXTS = [
   { key: 'host', label: 'Host', icon: <TerminalIcon /> },
@@ -24,7 +26,8 @@ const ContextualTerminal: React.FC = () => {
   const [tab, setTab] = useState(0);
   const [history, setHistory] = useState<string[][]>([[], [], [], []]);
   const [input, setInput] = useState(['', '', '', '']);
-  //
+  const [lastError, setLastError] = useState<string>('');
+  const { debugError } = useAI();
 
   const handleRun = async (ctxIdx: number) => {
     const cmd = input[ctxIdx];
@@ -67,6 +70,33 @@ const ContextualTerminal: React.FC = () => {
       result = { output: '', success: false, error: e.message };
     }
     setHistory(h => h.map((arr, i) => i === ctxIdx ? [...arr, result.success ? result.output : (result.error || result.output || 'Erreur inconnue')] : arr));
+
+    // Stocker la dernière erreur pour le bouton "Fix Error"
+    if (!result.success && result.error) {
+      setLastError(result.error);
+    }
+  };
+
+  const handleFixError = async () => {
+    if (!lastError) return;
+
+    try {
+      const debugResult = await debugError(lastError, { context: CONTEXTS[tab].key });
+      // Afficher le résultat du debug
+      const debugOutput = `🔧 AI Debug Analysis:
+Diagnosis: ${debugResult.diagnosis}
+
+Solutions:
+${debugResult.solutions.map((sol, i) => `${i + 1}. ${sol}`).join('\n')}
+
+Prevention:
+${debugResult.prevention.map((prev, i) => `${i + 1}. ${prev}`).join('\n')}`;
+
+      alert(debugOutput);
+    } catch (error) {
+      console.error('Failed to debug error:', error);
+      alert('Erreur lors de l\'analyse du debug');
+    }
   };
 
   return (
@@ -89,7 +119,7 @@ const ContextualTerminal: React.FC = () => {
           {history[tab].map((line, i) => <div key={i}>{line}</div>)}
         </Box>
         <form onSubmit={e => { e.preventDefault(); handleRun(tab); }}>
-          <Box sx={{ display: 'flex', gap: 1 }}>
+          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <Typography sx={{ fontFamily: 'monospace', fontWeight: 500 }}>{mockPrompt[CONTEXTS[tab].key as keyof typeof mockPrompt]}</Typography>
             <input
               style={{ flex: 1, fontFamily: 'monospace', fontSize: 15, border: 'none', outline: 'none', background: 'transparent', color: 'inherit' }}
@@ -101,6 +131,24 @@ const ContextualTerminal: React.FC = () => {
               aria-label="Entrée commande terminal"
             />
             <Button type="submit" variant="contained" size="small">Exécuter</Button>
+            {lastError && (
+              <Button
+                onClick={handleFixError}
+                variant="outlined"
+                size="small"
+                startIcon={<BugReportIcon />}
+                sx={{
+                  color: '#ff6b6b',
+                  borderColor: '#ff6b6b',
+                  '&:hover': {
+                    bgcolor: 'rgba(255, 107, 107, 0.1)',
+                    borderColor: '#ff6b6b',
+                  },
+                }}
+              >
+                Fix Error
+              </Button>
+            )}
           </Box>
         </form>
       </Box>

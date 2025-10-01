@@ -27,6 +27,10 @@ import {
   Add,
   Delete,
   Refresh,
+  Code,
+  BugReport,
+  Build,
+  Lightbulb,
 } from '@mui/icons-material';
 import { useAI } from '../../hooks/useAI';
 import { AIMessage } from '../../services/ai.service';
@@ -418,6 +422,83 @@ export const AIChatView: React.FC = () => {
 
       {/* Input */}
       <Box sx={{ p: 2, borderTop: '1px solid #2d2d30' }}>
+        {/* Quick Suggestions */}
+        <Box sx={{ mb: 2 }}>
+          <Typography variant="caption" sx={{ color: '#858585', mb: 1, display: 'block' }}>
+            Quick Actions:
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Lightbulb />}
+              onClick={() => setInput("Explain this code: ")}
+              sx={{
+                color: '#007acc',
+                borderColor: '#007acc',
+                fontSize: '11px',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 122, 204, 0.1)',
+                  borderColor: '#007acc',
+                },
+              }}
+            >
+              Explain Code
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<BugReport />}
+              onClick={() => setInput("Debug this error: ")}
+              sx={{
+                color: '#ff6b6b',
+                borderColor: '#ff6b6b',
+                fontSize: '11px',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 107, 107, 0.1)',
+                  borderColor: '#ff6b6b',
+                },
+              }}
+            >
+              Debug Error
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Build />}
+              onClick={() => setInput("Optimize this configuration: ")}
+              sx={{
+                color: '#4caf50',
+                borderColor: '#4caf50',
+                fontSize: '11px',
+                '&:hover': {
+                  bgcolor: 'rgba(76, 175, 80, 0.1)',
+                  borderColor: '#4caf50',
+                },
+              }}
+            >
+              Optimize
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<Code />}
+              onClick={() => setInput("Generate code for: ")}
+              sx={{
+                color: '#ff9800',
+                borderColor: '#ff9800',
+                fontSize: '11px',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 152, 0, 0.1)',
+                  borderColor: '#ff9800',
+                },
+              }}
+            >
+              Generate Code
+            </Button>
+          </Box>
+        </Box>
+
         <Box sx={{ display: 'flex', gap: 1 }}>
           <TextField
             fullWidth

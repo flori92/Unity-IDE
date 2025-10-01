@@ -3,13 +3,12 @@
  * Comme VS Code avec tabs, split view, minimap
  */
 
-import React, { useState, useEffect } from 'react';
-import { Box, Tab, Tabs, IconButton } from '@mui/material';
-import { Close, MoreHoriz } from '@mui/icons-material';
+import React, { useState, useRef } from 'react';
+import { Box, Tab, Tabs, IconButton, Button, Paper, Typography } from '@mui/material';
+import { Close, MoreHoriz, Lightbulb } from '@mui/icons-material';
 import Editor from '@monaco-editor/react';
 import * as monaco from 'monaco-editor';
 import { useAI } from '../../hooks/useAI';
-import { languageCompletionService } from '../../services/language-completion.service';
 
 interface EditorFile {
   id: string;
@@ -40,7 +39,7 @@ services:
       - "80:80"
     volumes:
       - ./html:/usr/share/nginx/html
-  
+
   db:
     image: postgres:15
     environment:
@@ -49,14 +48,15 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
-`,
+  postgres_data:`,
       isDirty: false,
     },
   ]);
 
   const [activeFileId, setActiveFileId] = useState('1');
-  const { generateCode } = useAI();
+  const [selectedCode, setSelectedCode] = useState<string>('');
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const { explainCode } = useAI();
 
   const activeFile = openFiles.find(f => f.id === activeFileId);
 
@@ -70,125 +70,34 @@ volumes:
     }
   };
 
-  const getAICompletions = async (
-    model: monaco.editor.ITextModel,
-    position: monaco.Position,
-    context: monaco.languages.CompletionContext,
-    token: monaco.CancellationToken
-  ): Promise<monaco.languages.CompletionList | null> => {
-    if (!activeFile || token.isCancellationRequested) {
-      return null;
-    }
-
-    const word = model.getWordUntilPosition(position);
-    const range = new monaco.Range(
-      position.lineNumber,
-      word.startColumn,
-      position.lineNumber,
-      position.column
-    );
-
-    const currentLine = model.getLineContent(position.lineNumber);
-    const contextText = model.getValueInRange({
-      startLineNumber: Math.max(1, position.lineNumber - 10),
-      endLineNumber: position.lineNumber,
-      startColumn: 1,
-      endColumn: position.column,
-    });
+  const handleExplainCode = async () => {
+    if (!selectedCode || !editorRef.current) return;
 
     try {
-      // First, get language-specific completions
-      const languageSuggestions = languageCompletionService.getCompletions(activeFile.language, contextText, currentLine);
-
-      // Convert to Monaco completion items
-      const languageCompletions: monaco.languages.CompletionItem[] = languageSuggestions.map(suggestion => ({
-        label: suggestion.label,
-        kind: suggestion.kind === 'keyword' ? monaco.languages.CompletionItemKind.Keyword :
-             suggestion.kind === 'function' ? monaco.languages.CompletionItemKind.Function :
-             suggestion.kind === 'type' ? monaco.languages.CompletionItemKind.Class :
-             suggestion.kind === 'variable' ? monaco.languages.CompletionItemKind.Variable :
-             suggestion.kind === 'property' ? monaco.languages.CompletionItemKind.Property :
-             monaco.languages.CompletionItemKind.Text,
-        insertText: suggestion.insertText,
-        range: range,
-        documentation: suggestion.documentation,
-        sortText: '1', // Higher priority than AI suggestions
-      }));
-
-      // Try to get AI completions
-      let codeType: 'dockerfile' | 'kubernetes' | 'ansible' | 'script' = 'script';
-      if (activeFile.language === 'yaml' && contextText.includes('services:')) {
-        codeType = 'dockerfile';
-      } else if (activeFile.language === 'yaml' && contextText.includes('apiVersion:')) {
-        codeType = 'kubernetes';
-      } else if (activeFile.language === 'yaml' && contextText.includes('hosts:')) {
-        codeType = 'ansible';
-      }
-
-      const aiResponse = await generateCode(codeType, contextText, { language: activeFile.language });
-
-      if (aiResponse && aiResponse.length > 0) {
-        const aiCompletion: monaco.languages.CompletionItem = {
-          label: 'AI Suggestion',
-          kind: monaco.languages.CompletionItemKind.Snippet,
-          insertText: aiResponse.trim(),
-          range: range,
-          documentation: {
-            value: 'AI-generated completion based on context',
-            isTrusted: true,
-          },
-          sortText: '0',
-          preselect: true,
-        };
-
-        return { suggestions: [...languageCompletions, aiCompletion] };
-      }
-
-      // Return language completions if no AI response
-      if (languageCompletions.length > 0) {
-        return { suggestions: languageCompletions };
-      }
+      const explanation = await explainCode(selectedCode, activeFile?.language);
+      // Pour l'instant, afficher dans console - TODO: modal/popup
+      console.log('Code explanation:', explanation);
+      alert(`Explanation: ${explanation}`);
     } catch (error) {
-      console.error('AI completion error:', error);
-      // Fall back to language completions
-      const languageSuggestions = languageCompletionService.getCompletions(activeFile.language, contextText, currentLine);
-      const languageCompletions: monaco.languages.CompletionItem[] = languageSuggestions.map(suggestion => ({
-        label: suggestion.label,
-        kind: suggestion.kind === 'keyword' ? monaco.languages.CompletionItemKind.Keyword :
-             suggestion.kind === 'function' ? monaco.languages.CompletionItemKind.Function :
-             suggestion.kind === 'type' ? monaco.languages.CompletionItemKind.Class :
-             suggestion.kind === 'variable' ? monaco.languages.CompletionItemKind.Variable :
-             suggestion.kind === 'property' ? monaco.languages.CompletionItemKind.Property :
-             monaco.languages.CompletionItemKind.Text,
-        insertText: suggestion.insertText,
-        range: range,
-        documentation: suggestion.documentation,
-        sortText: '1',
-      }));
-
-      if (languageCompletions.length > 0) {
-        return { suggestions: languageCompletions };
-      }
+      console.error('Failed to explain code:', error);
+      alert('Erreur lors de l\'explication du code');
     }
-
-    return null;
   };
 
-  // Register AI completion provider when Monaco loads
-  useEffect(() => {
-    if (activeFile) {
-      // Wait for Monaco to be available
-      import('monaco-editor').then((monaco) => {
-        const disposable = monaco.languages.registerCompletionItemProvider(activeFile.language, {
-          provideCompletionItems: getAICompletions,
-          triggerCharacters: [' ', '\n', '\t', '.', ':', '-', '_'],
-        });
+  const handleEditorDidMount = (editor: monaco.editor.IStandaloneCodeEditor) => {
+    editorRef.current = editor;
 
-        // Cleanup on unmount or language change
-        return () => disposable.dispose();
-      });
-    }
-  }, [activeFile?.language]);
+    // Écouter les changements de sélection
+    editor.onDidChangeCursorSelection((e) => {
+      const selection = editor.getSelection();
+      if (selection && !selection.isEmpty()) {
+        const selectedText = editor.getModel()?.getValueInRange(selection) || '';
+        setSelectedCode(selectedText);
+      } else {
+        setSelectedCode('');
+      }
+    });
+  };
 
   return (
     <Box
@@ -269,6 +178,28 @@ volumes:
           ))}
         </Tabs>
 
+        {/* AI Tools */}
+        {selectedCode && (
+          <Box sx={{ ml: 2, display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              startIcon={<Lightbulb sx={{ fontSize: 16 }} />}
+              onClick={handleExplainCode}
+              sx={{
+                color: '#007acc',
+                fontSize: '12px',
+                textTransform: 'none',
+                bgcolor: 'rgba(0, 122, 204, 0.1)',
+                '&:hover': {
+                  bgcolor: 'rgba(0, 122, 204, 0.2)',
+                },
+              }}
+            >
+              Explain Code
+            </Button>
+          </Box>
+        )}
+
         {/* More Options */}
         <Box sx={{ ml: 'auto', mr: 1 }}>
           <IconButton size="small" sx={{ color: '#858585' }}>
@@ -302,6 +233,7 @@ volumes:
                 enabled: true,
               },
             }}
+            onMount={handleEditorDidMount}
             onChange={(value) => {
               // Handle content change
               console.log('Content changed:', value);
