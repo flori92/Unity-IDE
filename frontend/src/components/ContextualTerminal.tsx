@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { localBackend } from '../services/localBackendService';
-import { Box, Tabs, Tab, Button, Typography, Chip, Tooltip } from '@mui/material';
+import { Box, Tabs, Tab, Button, Chip, Tooltip } from '@mui/material';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import DockerIcon from '@mui/icons-material/Computer';
 import K8sIcon from '@mui/icons-material/CloudQueue';
@@ -78,7 +78,9 @@ const ContextualTerminal: React.FC = () => {
   };
 
   const handleFixError = async () => {
-    if (!lastError) return;
+    if (!lastError) {
+      return;
+    }
 
     try {
       const debugResult = await debugError(lastError, { context: CONTEXTS[tab].key });

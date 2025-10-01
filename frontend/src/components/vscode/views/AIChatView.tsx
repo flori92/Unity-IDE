@@ -18,7 +18,6 @@ import {
   InputLabel,
   Chip,
   CircularProgress,
-  Divider,
 } from '@mui/material';
 import {
   Send,
@@ -131,7 +130,9 @@ export const AIChatView: React.FC = () => {
   }, [currentConversation?.messages]);
 
   const handleSend = async () => {
-    if (!input.trim() || loading || streaming) return;
+    if (!input.trim() || loading || streaming) {
+      return;
+    }
 
     const message = input.trim();
     setInput('');
