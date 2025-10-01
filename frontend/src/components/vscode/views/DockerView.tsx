@@ -1,10 +1,11 @@
 /**
  * Docker View - Vue Docker style VS Code
  * Liste des conteneurs, images, volumes, networks
+ * Intégré avec useDocker pour actions temps réel
  */
 
 import React, { useState } from 'react';
-import { Box, Typography, Collapse, IconButton } from '@mui/material';
+import { Box, Typography, Collapse, IconButton, CircularProgress } from '@mui/material';
 import {
   ExpandMore,
   ChevronRight,
@@ -13,38 +14,8 @@ import {
   Delete,
   Refresh,
 } from '@mui/icons-material';
-
-interface DockerContainer {
-  id: string;
-  name: string;
-  image: string;
-  status: 'running' | 'stopped' | 'paused';
-  ports: string[];
-}
-
-const mockContainers: DockerContainer[] = [
-  {
-    id: 'abc123',
-    name: 'nginx-web',
-    image: 'nginx:latest',
-    status: 'running',
-    ports: ['80:80', '443:443'],
-  },
-  {
-    id: 'def456',
-    name: 'postgres-db',
-    image: 'postgres:15',
-    status: 'running',
-    ports: ['5432:5432'],
-  },
-  {
-    id: 'ghi789',
-    name: 'redis-cache',
-    image: 'redis:7',
-    status: 'stopped',
-    ports: ['6379:6379'],
-  },
-];
+import { useDocker, DockerContainer } from '../../../hooks/useDocker';
+import { useSnackbar } from 'notistack';
 
 interface SectionProps {
   title: string;
@@ -86,8 +57,16 @@ const Section: React.FC<SectionProps> = ({ title, count, children, defaultExpand
   );
 };
 
-const ContainerItem: React.FC<{ container: DockerContainer }> = ({ container }) => {
+interface ContainerItemProps {
+  container: DockerContainer;
+  onStart: (id: string) => Promise<void>;
+  onStop: (id: string) => Promise<void>;
+  onRemove: (id: string) => Promise<void>;
+}
+
+const ContainerItem: React.FC<ContainerItemProps> = ({ container, onStart, onStop, onRemove }) => {
   const [hovered, setHovered] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -99,6 +78,26 @@ const ContainerItem: React.FC<{ container: DockerContainer }> = ({ container }) 
         return '#ce9178';
       default:
         return '#cccccc';
+    }
+  };
+
+  const handleStart = async () => {
+    setLoading(true);
+    await onStart(container.id);
+    setLoading(false);
+  };
+
+  const handleStop = async () => {
+    setLoading(true);
+    await onStop(container.id);
+    setLoading(false);
+  };
+
+  const handleRemove = async () => {
+    if (confirm(`Remove container ${container.name}?`)) {
+      setLoading(true);
+      await onRemove(container.id);
+      setLoading(false);
     }
   };
 
@@ -143,27 +142,80 @@ const ContainerItem: React.FC<{ container: DockerContainer }> = ({ container }) 
         </Typography>
       </Box>
 
-      {hovered && (
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
-          {container.status === 'running' ? (
-            <IconButton size="small" sx={{ color: '#858585', padding: 0 }}>
-              <Stop sx={{ fontSize: 14 }} />
+      {loading ? (
+        <CircularProgress size={14} sx={{ color: '#858585' }} />
+      ) : (
+        hovered && (
+          <Box sx={{ display: 'flex', gap: 0.5 }}>
+            {container.status === 'running' ? (
+              <IconButton size="small" sx={{ color: '#858585', padding: 0 }} onClick={handleStop}>
+                <Stop sx={{ fontSize: 14 }} />
+              </IconButton>
+            ) : (
+              <IconButton size="small" sx={{ color: '#858585', padding: 0 }} onClick={handleStart}>
+                <PlayArrow sx={{ fontSize: 14 }} />
+              </IconButton>
+            )}
+            <IconButton size="small" sx={{ color: '#858585', padding: 0 }} onClick={handleRemove}>
+              <Delete sx={{ fontSize: 14 }} />
             </IconButton>
-          ) : (
-            <IconButton size="small" sx={{ color: '#858585', padding: 0 }}>
-              <PlayArrow sx={{ fontSize: 14 }} />
-            </IconButton>
-          )}
-          <IconButton size="small" sx={{ color: '#858585', padding: 0 }}>
-            <Delete sx={{ fontSize: 14 }} />
-          </IconButton>
-        </Box>
+          </Box>
+        )
       )}
     </Box>
   );
 };
 
 export const DockerView: React.FC = () => {
+  const {
+    containers,
+    images,
+    loading,
+    error,
+    loadContainers,
+    loadImages,
+    startContainer,
+    stopContainer,
+    removeContainer,
+  } = useDocker();
+
+  const { enqueueSnackbar } = useSnackbar();
+
+  const handleStart = async (id: string) => {
+    const success = await startContainer(id);
+    if (success) {
+      enqueueSnackbar('Container started successfully', { variant: 'success' });
+    } else {
+      enqueueSnackbar('Failed to start container', { variant: 'error' });
+    }
+  };
+
+  const handleStop = async (id: string) => {
+    const success = await stopContainer(id);
+    if (success) {
+      enqueueSnackbar('Container stopped successfully', { variant: 'success' });
+    } else {
+      enqueueSnackbar('Failed to stop container', { variant: 'error' });
+    }
+  };
+
+  const handleRemove = async (id: string) => {
+    const success = await removeContainer(id);
+    if (success) {
+      enqueueSnackbar('Container removed successfully', { variant: 'success' });
+    } else {
+      enqueueSnackbar('Failed to remove container', { variant: 'error' });
+    }
+  };
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2, color: '#f48771' }}>
+        <Typography variant="body2">Error: {error}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Box>
       {/* Header Actions */}
@@ -178,53 +230,59 @@ export const DockerView: React.FC = () => {
         }}
       >
         <Typography variant="caption" sx={{ color: '#858585', fontSize: '11px' }}>
-          Docker Desktop Connected
+          {loading ? 'Loading...' : `Docker Desktop Connected (${containers.length} containers)`}
         </Typography>
-        <IconButton size="small" sx={{ color: '#858585' }}>
+        <IconButton 
+          size="small" 
+          sx={{ color: '#858585' }}
+          onClick={() => {
+            loadContainers();
+            loadImages();
+          }}
+          disabled={loading}
+        >
           <Refresh sx={{ fontSize: 16 }} />
         </IconButton>
       </Box>
 
       {/* Containers Section */}
-      <Section title="Containers" count={mockContainers.length}>
-        {mockContainers.map((container) => (
-          <ContainerItem key={container.id} container={container} />
+      <Section title="Containers" count={containers.length}>
+        {containers.map((container) => (
+          <ContainerItem
+            key={container.id}
+            container={container}
+            onStart={handleStart}
+            onStop={handleStop}
+            onRemove={handleRemove}
+          />
         ))}
       </Section>
 
       {/* Images Section */}
-      <Section title="Images" count={12}>
-        <Box sx={{ pl: 3, py: 0.5 }}>
-          <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
-            nginx:latest
-          </Typography>
-        </Box>
-        <Box sx={{ pl: 3, py: 0.5 }}>
-          <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
-            postgres:15
-          </Typography>
-        </Box>
-        <Box sx={{ pl: 3, py: 0.5 }}>
-          <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
-            redis:7
-          </Typography>
-        </Box>
+      <Section title="Images" count={images.length} defaultExpanded={false}>
+        {images.map((image) => (
+          <Box key={image.id} sx={{ pl: 3, py: 0.5 }}>
+            <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
+              {image.repository}:{image.tag}
+            </Typography>
+          </Box>
+        ))}
       </Section>
 
       {/* Volumes Section */}
-      <Section title="Volumes" count={3} defaultExpanded={false}>
+      <Section title="Volumes" count={0} defaultExpanded={false}>
         <Box sx={{ pl: 3, py: 0.5 }}>
           <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
-            postgres_data
+            No volumes
           </Typography>
         </Box>
       </Section>
 
       {/* Networks Section */}
-      <Section title="Networks" count={2} defaultExpanded={false}>
+      <Section title="Networks" count={0} defaultExpanded={false}>
         <Box sx={{ pl: 3, py: 0.5 }}>
           <Typography variant="caption" sx={{ fontSize: '13px', color: '#858585' }}>
-            bridge
+            No networks
           </Typography>
         </Box>
       </Section>
