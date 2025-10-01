@@ -166,8 +166,8 @@ build_frontend() {
     local current_dir=$(pwd)
     cd frontend
 
-    # Install dependencies
-    npm install
+    # Install dependencies (with legacy peer deps for compatibility)
+    npm install --legacy-peer-deps
 
     # Build for production
     npm run build
