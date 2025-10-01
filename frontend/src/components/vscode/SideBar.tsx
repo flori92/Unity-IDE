@@ -15,6 +15,7 @@ import SettingsView from './views/SettingsView';
 import AIChatView from './views/AIChatView';
 import CollabView from './views/CollabView';
 import ChatView from './views/ChatView';
+import SyncView from './views/SyncView';
 
 interface SideBarProps {
   activeView: string;
@@ -47,6 +48,8 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
         return <ChatView />;
       case 'ai-chat':
         return <AIChatView />;
+      case 'sync':
+        return <SyncView />;
       case 'extensions':
         return <ExtensionsView />;
       case 'settings':
@@ -68,6 +71,7 @@ export const SideBar: React.FC<SideBarProps> = ({ activeView, width }) => {
       'team-chat': 'TEAM CHAT',
       extensions: 'EXTENSIONS',
       'ai-chat': 'AI COPILOT',
+      sync: 'SYNC & BACKUP',
       settings: 'SETTINGS',
     };
     return titles[activeView] || 'UNITY DEVOPS IDE';
