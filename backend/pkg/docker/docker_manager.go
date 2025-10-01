@@ -1,5 +1,6 @@
+package docker
+
 import (
-	// ...existing imports...
 	"context"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/strslice"

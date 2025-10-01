@@ -374,4 +374,19 @@ class LocalBackendService {
 }
 
 // Export singleton instance
-export const localBackend = new LocalBackendService();
+const backend = new LocalBackendService();
+
+// Mode démo : basculer entre le vrai backend et le mock
+const DEMO_MODE = (import.meta as any).env?.VITE_DEMO_MODE === 'true' || localStorage.getItem('demoMode') === 'true';
+
+if (DEMO_MODE) {
+  console.log('🎭 MODE DÉMO ACTIVÉ - Utilisation des données mock');
+  console.log('💡 Pour désactiver : localStorage.removeItem("demoMode")');
+}
+
+export const localBackend = DEMO_MODE 
+  ? (async () => {
+      const { mockBackend } = await import('./mockBackendService');
+      return mockBackend;
+    })() as any as LocalBackendService
+  : backend;

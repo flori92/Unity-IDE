@@ -1,9 +1,13 @@
+package kubernetes
+
 import (
-	// ...existing imports...
 	"bytes"
+	"fmt"
 	"io"
-	"k8s.io/client-go/tools/remotecommand"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/remotecommand"
 )
 // ExecInPod exécute une commande dans un pod Kubernetes et retourne la sortie
 func (km *K8sManager) ExecInPod(namespace, pod, container string, command []string) (string, error) {
