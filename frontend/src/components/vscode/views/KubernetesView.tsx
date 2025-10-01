@@ -6,7 +6,7 @@
 
 import React, { useState } from 'react';
 import { Box, Typography, Collapse, IconButton, CircularProgress, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Button } from '@mui/material';
-import { ExpandMore, ChevronRight, Delete, Refresh, ScaleIcon } from '@mui/icons-material';
+import { ExpandMore, ChevronRight, Delete, Refresh, ZoomOutMap } from '@mui/icons-material';
 import { useKubernetes } from '../../../hooks/useKubernetes';
 import { useSnackbar } from 'notistack';
 
@@ -218,7 +218,7 @@ const DeploymentItem: React.FC<DeploymentItemProps> = ({ deployment, onScale }) 
               sx={{ color: '#858585', padding: 0 }}
               onClick={() => setShowScaleDialog(true)}
             >
-              <ScaleIcon sx={{ fontSize: 14 }} />
+              <ZoomOutMap sx={{ fontSize: 14 }} />
             </IconButton>
           )}
         </Box>

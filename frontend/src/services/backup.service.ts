@@ -147,7 +147,7 @@ class BackupService {
 
     // Backup des settings
     if (this.settings.includeSettings) {
-      const settings = this.getSettings();
+      const settings = this.getUserSettings();
       items.push({
         type: 'settings',
         name: 'User Settings',
@@ -337,9 +337,9 @@ class BackupService {
   }
 
   /**
-   * Obtenir les settings
+   * Obtenir les user settings
    */
-  private getSettings(): any {
+  private getUserSettings(): any {
     // En production, récupérer depuis le state de l'application
     return localStorage.getItem('unity-ide-settings') || '{}';
   }
