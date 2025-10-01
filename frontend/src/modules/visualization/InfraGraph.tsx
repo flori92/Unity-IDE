@@ -1,6 +1,6 @@
+import React, { useEffect, useState, useRef } from 'react';
+import { Box, Typography, CircularProgress, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions, Tooltip, Chip, TextField, Slider } from '@mui/material';
 import { useNotificationStore } from '../../store/notificationStore';
-import React, { useEffect, useState } from 'react';
-import { Box, Typography, CircularProgress, Paper, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { localBackend } from '../../services/localBackendService';
 import ReactFlow, { Background, Controls, MiniMap, Node, Edge } from 'reactflow';
 import 'reactflow/dist/style.css';
@@ -11,6 +11,41 @@ const nodeColors: Record<string, string> = {
   k8s: '#326ce5',
   service: '#43a047',
 };
+// Helpers pour badges et tooltips
+function getStatusColor(status: string) {
+  switch (status) {
+    case 'Running': return 'success';
+    case 'Pending': return 'warning';
+    case 'Failed': return 'error';
+    case 'Stopped': return 'default';
+    default: return 'default';
+  }
+}
+
+function NodeBadge({ node }: { node: Node }) {
+  if (node.id.startsWith('docker-') && node.data.metrics) {
+    const { cpuUsage, memoryUsage, memoryLimit } = node.data.metrics;
+    return (
+      <Tooltip title={<>
+        <div>CPU: {cpuUsage?.toFixed(1)}%</div>
+        <div>Mémoire: {((memoryUsage/1024/1024)||0).toFixed(1)} Mo / {((memoryLimit/1024/1024)||0).toFixed(1)} Mo</div>
+      </>}>
+        <Chip size="small" label={`CPU ${cpuUsage?.toFixed(1)}%`} color="primary" sx={{ ml: 1 }} />
+      </Tooltip>
+    );
+  }
+  if (node.id.startsWith('k8s-')) {
+    const status = node.data.status || 'Unknown';
+    return (
+      <Tooltip title={<>
+        <div>Statut: {status}</div>
+      </>}>
+        <Chip size="small" label={status} color={getStatusColor(status)} sx={{ ml: 1 }} />
+      </Tooltip>
+    );
+  }
+  return null;
+}
 
 function makeNodesAndEdges(data: any) {
   const nodes: Node[] = [];
@@ -45,6 +80,8 @@ function makeNodesAndEdges(data: any) {
 const InfraGraph: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [graph, setGraph] = useState<{ nodes: Node[]; edges: Edge[] }>({ nodes: [], edges: [] });
+  const metricsRef = useRef<any>({});
+  const k8sStatusRef = useRef<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<Node | null>(null);
   const [details, setDetails] = useState<any>(null);
@@ -53,9 +90,15 @@ const InfraGraph: React.FC = () => {
   const [execResult, setExecResult] = useState<string | null>(null);
   const [execOpen, setExecOpen] = useState(false);
   const [execCmd, setExecCmd] = useState('');
+  const [scaleOpen, setScaleOpen] = useState(false);
+  const [scaleValue, setScaleValue] = useState(1);
+  const [rollingOpen, setRollingOpen] = useState(false);
   const { addNotification } = useNotificationStore();
 
   useEffect(() => {
+    let unsubMetrics: (() => void) | null = null;
+    let unsubK8s: (() => void) | null = null;
+    let mounted = true;
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -66,17 +109,76 @@ const InfraGraph: React.FC = () => {
           localBackend.getPods().catch(() => []),
           localBackend.getServices().catch(() => []),
         ]);
-        setGraph(makeNodesAndEdges({ sys, containers, pods, services }));
+        // On enrichit les nœuds avec les métriques live si dispo
+        const { nodes, edges } = makeNodesAndEdges({ sys, containers, pods, services });
+        nodes.forEach((node) => {
+          if (node.id.startsWith('docker-') && metricsRef.current[node.id]) {
+            node.data.metrics = metricsRef.current[node.id];
+          }
+          if (node.id.startsWith('k8s-') && k8sStatusRef.current[node.id]) {
+            node.data.status = k8sStatusRef.current[node.id];
+          }
+        });
+        if (mounted) {
+          setGraph({ nodes, edges });
+        }
       } catch (e: any) {
         setError(e.message || 'Erreur lors du chargement du graphe');
       }
       setLoading(false);
     };
     fetchData();
+
+    // Abonnement aux métriques Docker
+    unsubMetrics = localBackend.subscribeToMetrics((data) => {
+      // Si data contient des métriques par conteneur (ex: { containers: { id: { cpuUsage, ... } } })
+      if (data && typeof data === 'object' && 'containers' in data && data.containers) {
+        Object.entries(data.containers).forEach(([id, metrics]: any) => {
+          metricsRef.current['docker-' + id] = metrics;
+        });
+        setGraph((prev) => {
+          const nodes = prev.nodes.map((n) =>
+            n.id.startsWith('docker-') && metricsRef.current[n.id]
+              ? { ...n, data: { ...n.data, metrics: metricsRef.current[n.id] } }
+              : n
+          );
+          return { ...prev, nodes };
+        });
+      }
+      // Sinon, ignore (structure non supportée)
+    });
+
+    // Abonnement aux events K8s (statut pod)
+    unsubK8s = localBackend.subscribeToK8sEvents((event) => {
+      if (!event || !event.object || !event.object.metadata) {
+        return;
+      }
+      const podName = event.object.metadata.name;
+      const status = event.object.status?.phase || 'Unknown';
+      k8sStatusRef.current['k8s-' + podName] = status;
+      setGraph((prev) => {
+        const nodes = prev.nodes.map((n) =>
+          n.id.startsWith('k8s-') && n.id === 'k8s-' + podName
+            ? { ...n, data: { ...n.data, status } }
+            : n
+        );
+        return { ...prev, nodes };
+      });
+    });
+
+    return () => {
+      mounted = false;
+      if (unsubMetrics) {
+        unsubMetrics();
+      }
+      if (unsubK8s) {
+        unsubK8s();
+      }
+    };
   }, []);
 
   // Sélection de nœud
-  const onNodeClick = (_: any, node: Node) => {
+  const onNodeClick = (_event: any, node: Node) => {
     setSelected(node);
     setDetails(node.data);
   };
@@ -251,6 +353,52 @@ const InfraGraph: React.FC = () => {
     }
   };
 
+  // Action scale déploiement K8s
+  const handleScale = async () => {
+    if (!selected) {
+      return;
+    }
+    const name = selected.data.label;
+    try {
+      await localBackend.scaleDeployment(name, 'default', scaleValue);
+      addNotification({
+        message: `Déploiement scalé à ${scaleValue} pods !`,
+        severity: 'success',
+        source: 'k8s',
+      });
+      setScaleOpen(false);
+    } catch (e: any) {
+      addNotification({
+        message: e.message || 'Erreur lors du scale',
+        severity: 'error',
+        source: 'k8s',
+      });
+    }
+  };
+
+  // Action rolling restart déploiement K8s
+  const handleRollingRestart = async () => {
+    if (!selected) {
+      return;
+    }
+    const name = selected.data.label;
+    try {
+      await localBackend.rollingRestartDeployment(name, 'default');
+      addNotification({
+        message: `Rolling restart lancé sur ${name} !`,
+        severity: 'success',
+        source: 'k8s',
+      });
+      setRollingOpen(false);
+    } catch (e: any) {
+      addNotification({
+        message: e.message || 'Erreur rolling restart',
+        severity: 'error',
+        source: 'k8s',
+      });
+    }
+  };
+
   return (
     <Box sx={{ p: 3, height: 600 }}>
       <Typography variant="h5" gutterBottom>Topologie graphique de l'infrastructure</Typography>
@@ -262,6 +410,14 @@ const InfraGraph: React.FC = () => {
             <MiniMap />
             <Controls />
             <Background />
+            {/* Badges sur chaque nœud */}
+            {graph.nodes.map((node) => (
+              <foreignObject key={node.id + '-badge'} x={node.position.x + 120} y={node.position.y - 20} width={80} height={40} style={{ pointerEvents: 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <NodeBadge node={node} />
+                </div>
+              </foreignObject>
+            ))}
           </ReactFlow>
           {selected && (
             <Box sx={{ position: 'absolute', top: 16, right: 16, bgcolor: '#fff', p: 2, borderRadius: 2, boxShadow: 3, minWidth: 260 }}>
@@ -273,8 +429,38 @@ const InfraGraph: React.FC = () => {
                 <Button size="small" color="warning" onClick={handleRestart}>Redémarrer</Button>
                 <Button size="small" color="secondary" onClick={handleStop}>Arrêter</Button>
                 <Button size="small" color="error" onClick={handleRemove}>Supprimer</Button>
+                {selected.id.startsWith('k8s-') && (
+                  <>
+                    <Button size="small" color="info" onClick={() => setScaleOpen(true)}>Scaler</Button>
+                    <Button size="small" color="info" onClick={() => setRollingOpen(true)}>Rolling Restart</Button>
+                  </>
+                )}
                 <Button size="small" onClick={() => setSelected(null)}>Fermer</Button>
               </Box>
+          {/* Dialog scale K8s */}
+          <Dialog open={scaleOpen} onClose={() => setScaleOpen(false)} maxWidth="xs">
+            <DialogTitle>Scaler le déploiement</DialogTitle>
+            <DialogContent>
+              <Typography>Nombre de pods :</Typography>
+              <Slider min={1} max={20} value={scaleValue} onChange={(_, v) => setScaleValue(Number(v))} valueLabelDisplay="auto" sx={{ mt: 2, mb: 2 }} />
+              <TextField type="number" label="Pods" value={scaleValue} onChange={e => setScaleValue(Number(e.target.value))} inputProps={{ min: 1, max: 20 }} fullWidth />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setScaleOpen(false)}>Annuler</Button>
+              <Button onClick={handleScale} variant="contained">Valider</Button>
+            </DialogActions>
+          </Dialog>
+          {/* Dialog rolling restart K8s */}
+          <Dialog open={rollingOpen} onClose={() => setRollingOpen(false)} maxWidth="xs">
+            <DialogTitle>Rolling Restart du déploiement</DialogTitle>
+            <DialogContent>
+              <Typography>Confirmer le rolling restart sur <b>{selected?.data.label}</b> ?</Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setRollingOpen(false)}>Annuler</Button>
+              <Button onClick={handleRollingRestart} variant="contained" color="warning">Rolling Restart</Button>
+            </DialogActions>
+          </Dialog>
               <pre style={{ fontSize: 12, maxHeight: 120, overflow: 'auto', background: '#f5f5f5', padding: 8 }}>{JSON.stringify(details, null, 2)}</pre>
             </Box>
           )}

@@ -1,5 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Typography, Paper, Chip, CircularProgress, Tooltip } from '@mui/material';
+import { Box, Typography, Paper, Chip, CircularProgress, Tooltip, Avatar } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import WarningIcon from '@mui/icons-material/Warning';
+import PauseCircleIcon from '@mui/icons-material/PauseCircle';
+function getStatusVisual(status: string) {
+  switch (status?.toLowerCase()) {
+    case 'running':
+    case 'online':
+      return { color: 'success.main', icon: <CheckCircleIcon color="success" />, label: 'En ligne' };
+    case 'stopped':
+    case 'exited':
+      return { color: 'grey.500', icon: <PauseCircleIcon color="disabled" />, label: 'Arrêté' };
+    case 'error':
+    case 'failed':
+      return { color: 'error.main', icon: <ErrorIcon color="error" />, label: 'Erreur' };
+    case 'pending':
+    case 'warning':
+      return { color: 'warning.main', icon: <WarningIcon color="warning" />, label: 'Attention' };
+    default:
+      return { color: 'info.main', icon: <PauseCircleIcon color="info" />, label: status };
+  }
+}
 import { localBackend } from '../../services/localBackendService';
 
 // Pour une vraie visualisation, on pourra intégrer react-flow, vis-network ou cytoscape
@@ -58,15 +80,21 @@ const InfraOverview: React.FC = () => {
       {loading && <CircularProgress />}
       {error && <Typography color="error">{error}</Typography>}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
-        {nodes.map(node => (
-          <Tooltip key={node.id} title={<pre style={{ margin: 0 }}>{JSON.stringify(node.details, null, 2)}</pre>}>
-            <Paper elevation={3} sx={{ minWidth: 180, p: 2, borderLeft: `6px solid ${nodeColors[node.type] || '#888'}` }}>
-              <Typography variant="subtitle1" fontWeight={600}>{node.label}</Typography>
-              <Chip label={node.type.toUpperCase()} size="small" sx={{ bgcolor: nodeColors[node.type], color: '#fff', mt: 1 }} />
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{node.status}</Typography>
-            </Paper>
-          </Tooltip>
-        ))}
+        {nodes.map(node => {
+          const visual = getStatusVisual(node.status);
+          return (
+            <Tooltip key={node.id} title={<pre style={{ margin: 0 }}>{JSON.stringify(node.details, null, 2)}</pre>}>
+              <Paper elevation={3} sx={{ minWidth: 180, p: 2, borderLeft: `6px solid ${nodeColors[node.type] || '#888'}`, position: 'relative', transition: 'box-shadow 0.3s', boxShadow: visual.color === 'error.main' ? 6 : 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar sx={{ bgcolor: visual.color, width: 28, height: 28 }}>{visual.icon}</Avatar>
+                  <Typography variant="subtitle1" fontWeight={600}>{node.label}</Typography>
+                </Box>
+                <Chip label={node.type.toUpperCase()} size="small" sx={{ bgcolor: nodeColors[node.type], color: '#fff', mt: 1 }} />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>{visual.label}</Typography>
+              </Paper>
+            </Tooltip>
+          );
+        })}
       </Box>
     </Box>
   );

@@ -1,3 +1,14 @@
+// Utilitaire global pour gestion d’erreur
+function handleError(err: any, context: string, addNotification: any) {
+  const msg = err?.message || err?.toString() || 'Erreur inconnue';
+  addNotification({
+    message: `[${context}] ${msg}`,
+    severity: 'error',
+    source: context,
+  });
+  // Log console (peut être enrichi pour backend)
+  console.error(`[${context}]`, err);
+}
 import { useState, useEffect } from 'react';
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material';
 import './styles/globals.css';
@@ -89,11 +100,7 @@ function DockerModule() {
         setImages(imgs);
       } catch (err: any) {
         setError(err.message || 'Erreur Docker');
-        addNotification({
-          message: `Erreur Docker : ${err.message || 'Erreur inconnue'}`,
-          severity: 'error',
-          source: 'docker',
-        });
+        handleError(err, 'Docker', addNotification);
       }
       setLoading(false);
     };
@@ -106,11 +113,7 @@ function DockerModule() {
       setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur démarrage');
-      addNotification({
-        message: `Erreur démarrage conteneur : ${err.message || id}`,
-        severity: 'error',
-        source: 'docker',
-      });
+      handleError(err, 'Docker', addNotification);
     }
   }
 
@@ -120,11 +123,7 @@ function DockerModule() {
       setContainers(await localBackend.getContainers());
     } catch (err: any) {
       setError(err.message || 'Erreur arrêt');
-      addNotification({
-        message: `Erreur arrêt conteneur : ${err.message || id}`,
-        severity: 'error',
-        source: 'docker',
-      });
+      handleError(err, 'Docker', addNotification);
     }
   }
 
@@ -193,11 +192,7 @@ function CICDModule() {
         setPipelines(data.workflows || []);
       } catch (err: any) {
         setError(err.message || 'Erreur CI/CD');
-        addNotification({
-          message: `Erreur CI/CD : ${err.message || 'Erreur inconnue'}`,
-          severity: 'error',
-          source: 'cicd',
-        });
+        handleError(err, 'CI/CD', addNotification);
       }
       setLoading(false);
     };
@@ -260,6 +255,7 @@ function MonitoringModule() {
         }
       } catch (err: any) {
         setError(err.message || 'Erreur monitoring');
+        handleError(err, 'Monitoring', addNotification);
       }
       setLoading(false);
     };

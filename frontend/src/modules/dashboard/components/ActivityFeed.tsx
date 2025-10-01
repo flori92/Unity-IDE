@@ -81,15 +81,15 @@ const ActivityFeed: React.FC = () => {
     });
 
     // Abonnements WebSocket
-    const unsubDocker = localBackend.subscribeToDockerLogs((data) => {
+    const unsubDocker = localBackend.subscribeToDockerLogs((data: any) => {
       const activity = mapDockerLog(data);
       setActivities(prev => [activity, ...prev].slice(0, 50));
     });
-    const unsubK8s = localBackend.subscribeToK8sEvents((data) => {
+    const unsubK8s = localBackend.subscribeToK8sEvents((data: any) => {
       const activity = mapK8sEvent(data);
       setActivities(prev => [activity, ...prev].slice(0, 50));
     });
-    const unsubAnsible = localBackend.subscribeToAnsibleExec((data) => {
+    const unsubAnsible = localBackend.subscribeToAnsibleExec((data: any) => {
       const activity = mapAnsibleExec(data);
       setActivities(prev => [activity, ...prev].slice(0, 50));
     });
