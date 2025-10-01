@@ -94,13 +94,11 @@ check_requirements() {
 download_and_extract() {
     log "Downloading $PROJECT_NAME $PROJECT_VERSION..."
 
-    # Create temporary directory
-    local temp_dir=$(mktemp -d)
-    cd "$temp_dir"
-
-    # For now, we'll assume the project is already cloned locally
-    # In production, this would download from GitHub releases
-    local source_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+    # Get the actual script directory (where install.sh is located)
+    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    
+    # The source is the directory containing install.sh
+    local source_dir="$script_dir"
 
     if [[ ! -d "$source_dir" ]]; then
         error "Source directory not found: $source_dir"
@@ -109,10 +107,34 @@ download_and_extract() {
 
     success "Using local source directory: $source_dir"
 
-    # Copy source to temp directory
-    cp -r "$source_dir"/* .
+    # Create temporary directory for build
+    local temp_dir=$(mktemp -d)
+    
+    # Copy only the necessary files (not system temp files!)
+    log "Copying source files to temporary build directory..."
+    
+    # Copy backend
+    if [[ -d "$source_dir/backend" ]]; then
+        cp -r "$source_dir/backend" "$temp_dir/"
+    fi
+    
+    # Copy frontend
+    if [[ -d "$source_dir/frontend" ]]; then
+        cp -r "$source_dir/frontend" "$temp_dir/"
+    fi
+    
+    # Copy scripts
+    if [[ -d "$source_dir/scripts" ]]; then
+        cp -r "$source_dir/scripts" "$temp_dir/"
+    fi
+    
+    # Create bin directory
+    mkdir -p "$temp_dir/bin"
+    
+    # Change to temp directory for build
+    cd "$temp_dir"
 
-    log "Source copied to temp directory"
+    log "Source copied to temp directory: $temp_dir"
 }
 
 # Build the backend
