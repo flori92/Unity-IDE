@@ -598,6 +598,215 @@ git push origin feature/amazing-feature
 # Ouvrir une Pull Request
 ```
 
+## 🏗️ **Build Multi-OS**
+
+### **📦 Build pour Tous les OS**
+
+Unity DevOps IDE peut être compilé pour macOS, Linux et Windows en une seule commande !
+
+#### **Build Tous les OS** (Recommandé)
+```bash
+cd frontend
+npm run tauri:build:all
+```
+
+Cela génère automatiquement :
+- 🍎 **macOS** : `.app` + `.dmg` (Apple Silicon + Intel)
+- 🐧 **Linux** : `.deb` + `.rpm` + `.AppImage`
+- 🪟 **Windows** : `.msi` + `.exe`
+
+---
+
+### **📱 Build par OS Spécifique**
+
+#### **🍎 macOS**
+```bash
+cd frontend
+npm run tauri:build:mac
+
+# Résultat :
+# ✅ DevOps Unity IDE.app
+# ✅ DevOps Unity IDE_1.0.0_aarch64.dmg
+# ✅ DevOps Unity IDE.app.tar.gz (updater)
+```
+
+**Installation :**
+```bash
+open "src-tauri/target/release/bundle/dmg/DevOps Unity IDE_1.0.0_aarch64.dmg"
+# Glisser dans /Applications
+```
+
+#### **🐧 Linux**
+```bash
+cd frontend
+npm run tauri:build:linux
+
+# Résultat :
+# ✅ devops-unity-ide_1.0.0_amd64.deb (Debian/Ubuntu)
+# ✅ devops-unity-ide-1.0.0-1.x86_64.rpm (RedHat/Fedora)
+# ✅ devops-unity-ide_1.0.0_amd64.AppImage (Universal)
+```
+
+**Installation Debian/Ubuntu :**
+```bash
+sudo dpkg -i src-tauri/target/release/bundle/deb/devops-unity-ide_1.0.0_amd64.deb
+```
+
+**Installation RedHat/Fedora :**
+```bash
+sudo rpm -i src-tauri/target/release/bundle/rpm/devops-unity-ide-1.0.0-1.x86_64.rpm
+```
+
+**AppImage (Portable) :**
+```bash
+chmod +x devops-unity-ide_1.0.0_amd64.AppImage
+./devops-unity-ide_1.0.0_amd64.AppImage
+```
+
+#### **🪟 Windows**
+```bash
+cd frontend
+npm run tauri:build:windows
+
+# Résultat :
+# ✅ DevOps Unity IDE_1.0.0_x64_en-US.msi (Installer)
+# ✅ DevOps Unity IDE.exe (Portable)
+```
+
+**Installation :**
+Double-cliquez sur le `.msi` ou lancez directement le `.exe`
+
+---
+
+### **⚙️ Options de Build Avancées**
+
+#### **Build avec Optimisations**
+```bash
+# Production optimisée
+npm run tauri:build -- --release
+
+# Debug avec symboles
+npm run tauri:build -- --debug
+```
+
+#### **Build Backend Seul**
+```bash
+cd backend
+go build -o ../bin/server cmd/server/main.go
+```
+
+#### **Build Frontend Seul**
+```bash
+cd frontend
+npm run build
+# Résultat dans : dist/
+```
+
+---
+
+### **🔧 Prérequis par OS**
+
+#### **macOS**
+```bash
+# Installer Xcode Command Line Tools
+xcode-select --install
+
+# Installer Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+#### **Linux (Ubuntu/Debian)**
+```bash
+sudo apt update
+sudo apt install -y libwebkit2gtk-4.0-dev \
+    build-essential \
+    curl \
+    wget \
+    libssl-dev \
+    libgtk-3-dev \
+    libayatana-appindicator3-dev \
+    librsvg2-dev
+
+# Installer Rust
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+```
+
+#### **Windows**
+```powershell
+# Installer Visual Studio Build Tools
+# https://visualstudio.microsoft.com/downloads/
+
+# Installer Rust
+# https://www.rust-lang.org/tools/install
+
+# Installer WebView2
+# https://developer.microsoft.com/en-us/microsoft-edge/webview2/
+```
+
+---
+
+### **📊 Tailles des Builds**
+
+| OS | Format | Taille | Taille Compressée |
+|----|--------|--------|-------------------|
+| macOS | .dmg | ~80 MB | ~45 MB |
+| Linux | .deb | ~75 MB | ~40 MB |
+| Linux | .AppImage | ~85 MB | ~48 MB |
+| Windows | .msi | ~70 MB | ~38 MB |
+
+---
+
+### **🚀 Distribution**
+
+#### **GitHub Releases**
+```bash
+# Créer une release
+gh release create v1.0.0 \
+  src-tauri/target/release/bundle/dmg/*.dmg \
+  src-tauri/target/release/bundle/deb/*.deb \
+  src-tauri/target/release/bundle/appimage/*.AppImage \
+  src-tauri/target/release/bundle/msi/*.msi
+```
+
+#### **Package Managers**
+
+**Homebrew (macOS) :**
+```bash
+brew tap flori92/unity-ide
+brew install unity-devops-ide
+```
+
+**Snap (Linux) :**
+```bash
+snap install unity-devops-ide
+```
+
+**Chocolatey (Windows) :**
+```powershell
+choco install unity-devops-ide
+```
+
+---
+
+### **🐛 Dépannage Build**
+
+#### **Erreur : "Rust not found"**
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+source $HOME/.cargo/env
+```
+
+#### **Erreur : "webkit2gtk not found" (Linux)**
+```bash
+sudo apt install libwebkit2gtk-4.0-dev
+```
+
+#### **Erreur : "MSBuild not found" (Windows)**
+Installez Visual Studio Build Tools depuis :
+https://visualstudio.microsoft.com/downloads/
+
+---
+
 ## 📝 License
 
 Ce projet est sous licence MIT. Voir le fichier [LICENSE](./LICENSE) pour plus de détails.
