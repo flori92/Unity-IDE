@@ -29,7 +29,7 @@ import {
   CloudUpload,
   CloudDownload,
   Commit,
-  BranchIcon,
+  AccountTree,
   Close,
 } from '@mui/icons-material';
 import { useGit } from '../../../hooks/useGit';
@@ -467,7 +467,7 @@ export const SourceControlView: React.FC = () => {
       <Dialog open={showBranchDialog} onClose={() => setShowBranchDialog(false)}>
         <DialogTitle sx={{ bgcolor: '#252526', color: '#cccccc' }}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <BranchIcon />
+            <AccountTree />
             Select Branch
           </Box>
         </DialogTitle>
