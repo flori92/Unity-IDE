@@ -141,6 +141,7 @@ download_and_extract() {
 build_backend() {
     log "Building backend..."
 
+    local current_dir=$(pwd)
     cd backend
 
     # Clean and build
@@ -152,6 +153,9 @@ build_backend() {
         exit 1
     fi
 
+    # Return to temp directory
+    cd "$current_dir"
+
     success "Backend built successfully"
 }
 
@@ -159,6 +163,7 @@ build_backend() {
 build_frontend() {
     log "Building frontend and Tauri application..."
 
+    local current_dir=$(pwd)
     cd frontend
 
     # Install dependencies
@@ -174,6 +179,9 @@ build_frontend() {
     if [[ ! -d "src-tauri/target/release" ]]; then
         warning "Tauri build may have failed - checking alternative locations..."
     fi
+
+    # Return to temp directory
+    cd "$current_dir"
 
     success "Frontend and Tauri application built"
 }
