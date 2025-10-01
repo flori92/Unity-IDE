@@ -1,7 +1,7 @@
 // Terminal intégré avancé - Style K9s avec super-pouvoirs
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { mockBackend } from '../services/mockBackendService';
-import { k9sIntegration } from '../services/k9sIntegration';
+// import { k9sIntegration } from '../services/k9sIntegration'; // Not used in this component
 
 interface TerminalLine {
   id: string;
@@ -252,7 +252,6 @@ Current: ${getContextPrefix().trim()}
             addLine(`${container.id.substring(0, 12)} ${container.name} ${container.status} ${container.image}`);
           });
           break;
-
         case 'kubernetes':
           if (resourceType === 'pods' || resourceType === 'all') {
             const pods = await mockBackend.getPods(context.namespace);
@@ -389,13 +388,13 @@ Current: ${getContextPrefix().trim()}
     }
   };
 
-  const showMetrics = async (args: string[]) => {
+  const showMetrics = async (_args: string[]) => {
     try {
       const metrics = await mockBackend.getSystemMetrics();
       addLine(`CPU: ${metrics.cpu.toFixed(1)}%`);
       addLine(`Memory: ${metrics.memory.toFixed(1)}%`);
-      addLine(`Disk: ${metrics.disk.toFixed(1)}%`);
-      addLine(`Network: RX ${metrics.network.rx.toFixed(0)} KB/s, TX ${metrics.network.tx.toFixed(0)} KB/s`);
+      addLine(`Disk: ${metrics.disk?.toFixed(1) ?? 'N/A'}%`);
+      addLine(`Network: RX ${metrics.network?.rx.toFixed(0) ?? 0} KB/s, TX ${metrics.network?.tx.toFixed(0) ?? 0} KB/s`);
     } catch (error) {
       addLine(`Failed to get metrics: ${error}`, 'error');
     }

@@ -24,6 +24,7 @@ export interface Container {
   state?: string;
   ports?: string[];
   created?: string;
+  labels?: Record<string, string>;
 }
 
 export interface Pod {
@@ -32,6 +33,10 @@ export interface Pod {
   status: string;
   ip?: string;
   node?: string;
+  ready?: string;
+  age?: string;
+  restarts?: number;
+  labels?: Record<string, string>;
 }
 
 export interface Service {
@@ -40,6 +45,9 @@ export interface Service {
   type: string;
   clusterIP?: string;
   ports?: string[];
+  externalIP?: string;
+  age?: string;
+  labels?: Record<string, string>;
 }
 
 export interface SystemInfo {
@@ -53,6 +61,8 @@ export interface SystemInfo {
   kubernetesRunning?: boolean;
   k8sConnected?: boolean;
   k8sVersion?: string;
+  uptime?: string;
+  loadAverage?: number[];
 }
 
 export interface SystemMetrics {

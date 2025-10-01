@@ -1,5 +1,5 @@
 // Mode K9s intégré - Raccourcis clavier et fonctionnalités avancées
-import { mockBackend } from './mockBackendService';
+// import { mockBackend } from './mockBackendService'; // Not used in this file
 
 export class K9sIntegration {
   private shortcuts: Map<string, () => void> = new Map();

@@ -25,14 +25,17 @@ export function initializeCore() {
 export async function initializeAsync() {
   console.time('⚡ Async Initialization');
 
-  // Précharger les composants React critiques
+  // Précharger les composants critiques
   const criticalImports = [
-    import('../components/IntegratedTerminal'),
-    import('../components/InfraGraph'),
-    import('../modules/dashboard/Dashboard'),
+    () => import('../components/IntegratedTerminal'),
+    () => import('../modules/dashboard/Dashboard'),
+    // Note: InfraGraph will be implemented later
+    // () => import('../components/InfraGraph'),
   ];
 
-  await Promise.all(criticalImports);
+  await Promise.all(criticalImports.map(importFn => importFn().catch(err =>
+    console.warn('[PRELOAD] Failed to preload component:', err)
+  )));
 
   // Initialiser les métriques de performance
   PerformanceOptimizations.performanceMetrics.recordMetric('app-startup', Date.now());

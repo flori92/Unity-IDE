@@ -236,18 +236,19 @@ export function usePowerSaving(interval: number = 5000) {
 
   return isActive;
 }
-
 // Optimisation du démarrage - preload des composants critiques
 export function usePreloadCritical() {
   useEffect(() => {
     // Preload des composants critiques
-    const criticalComponents = [
+    const criticalImports = [
+      () => import('../components/IntegratedTerminal'),
       () => import('../modules/dashboard/Dashboard'),
-      () => import('../modules/docker/DockerManager'),
-      () => import('../modules/kubernetes/K8sManager'),
+      // Note: DockerManager and K8sManager will be implemented later
+      // () => import('../modules/docker/DockerManager'),
+      // () => import('../modules/kubernetes/K8sManager'),
     ];
 
-    criticalComponents.forEach(importFn => {
+    criticalImports.forEach(importFn => {
       importFn().catch(err =>
         console.warn('[PRELOAD] Failed to preload component:', err)
       );
