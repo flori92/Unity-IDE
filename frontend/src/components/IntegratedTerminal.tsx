@@ -71,7 +71,9 @@ export const IntegratedTerminal: React.FC<{
   }, []);
 
   const executeCommand = useCallback(async (command: string) => {
-    if (!command.trim()) return;
+    if (!command.trim()) {
+      return;
+    }
 
     // Add to history
     setCommandHistory(prev => [...prev.slice(-49), command]); // Keep last 50 commands
@@ -441,7 +443,9 @@ Current: ${getContextPrefix().trim()}
     }
   };
 
-  if (!isVisible) return null;
+  if (!isVisible) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex flex-col">

@@ -9,7 +9,9 @@ export function useLazyLoad(options?: IntersectionObserverInit) {
 
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -168,10 +170,18 @@ export function useKeyboardShortcuts(shortcuts: Record<string, () => void>) {
 function buildKeyString(event: KeyboardEvent): string {
   let key = '';
 
-  if (event.ctrlKey) key += 'Ctrl+';
-  if (event.altKey) key += 'Alt+';
-  if (event.shiftKey) key += 'Shift+';
-  if (event.metaKey) key += 'Meta+';
+  if (event.ctrlKey) {
+    key += 'Ctrl+';
+  }
+  if (event.altKey) {
+    key += 'Alt+';
+  }
+  if (event.shiftKey) {
+    key += 'Shift+';
+  }
+  if (event.metaKey) {
+    key += 'Meta+';
+  }
 
   key += event.key;
 

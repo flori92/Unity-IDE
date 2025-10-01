@@ -67,10 +67,18 @@ export class K9sIntegration {
   private buildKeyString(event: KeyboardEvent): string {
     let key = '';
 
-    if (event.ctrlKey) key += 'Ctrl+';
-    if (event.altKey) key += 'Alt+';
-    if (event.shiftKey) key += 'Shift+';
-    if (event.metaKey) key += 'Meta+';
+    if (event.ctrlKey) {
+      key += 'Ctrl+';
+    }
+    if (event.altKey) {
+      key += 'Alt+';
+    }
+    if (event.shiftKey) {
+      key += 'Shift+';
+    }
+    if (event.metaKey) {
+      key += 'Meta+';
+    }
 
     key += event.key;
 
@@ -132,17 +140,16 @@ export class K9sIntegration {
     const replicas = prompt('[K9s] Scale to how many replicas?');
     if (replicas) {
       console.log(`[K9s] Scaling to ${replicas} replicas`);
-      // TODO: Mettre à l'échelle
     }
   }
 
   // Navigation
-  private moveDown() {
-    window.dispatchEvent(new CustomEvent('k9s-navigate', { detail: { direction: 'down' } }));
-  }
-
   private moveUp() {
     window.dispatchEvent(new CustomEvent('k9s-navigate', { detail: { direction: 'up' } }));
+  }
+
+  private moveDown() {
+    window.dispatchEvent(new CustomEvent('k9s-navigate', { detail: { direction: 'down' } }));
   }
 
   private goToTop() {

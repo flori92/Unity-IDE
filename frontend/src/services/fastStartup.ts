@@ -45,7 +45,9 @@ export async function initializeAsync() {
 
 // Hook global pour les raccourcis clavier K9s-style
 export function initializeGlobalShortcuts() {
-  if (typeof document === 'undefined') return;
+  if (typeof document === 'undefined') {
+    return;
+  }
 
   const k9sShortcuts = {
     // Navigation (comme K9s)
