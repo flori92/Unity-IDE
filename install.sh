@@ -113,11 +113,6 @@ download_and_extract() {
     # Copy only the necessary files (not system temp files!)
     log "Copying source files to temporary build directory..."
     
-    # Copy backend
-    if [[ -d "$source_dir/backend" ]]; then
-        cp -r "$source_dir/backend" "$temp_dir/"
-    fi
-    
     # Copy frontend
     if [[ -d "$source_dir/frontend" ]]; then
         cp -r "$source_dir/frontend" "$temp_dir/"
