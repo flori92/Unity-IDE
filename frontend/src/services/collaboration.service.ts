@@ -387,7 +387,7 @@ class CollaborationService {
     // En production, utiliser une vraie URL WebSocket
     const wsUrl = `ws://localhost:3001/collaboration/${sessionId}`;
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       try {
         this.ws = new WebSocket(wsUrl);
 

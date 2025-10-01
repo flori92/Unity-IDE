@@ -265,8 +265,7 @@ export function useSync(): UseSyncReturn {
   const createBackup = useCallback(async (name?: string) => {
     setError(null);
     try {
-      const backup = await backupService.createBackup(name);
-      return backup;
+      return await backupService.createBackup(name);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -296,8 +295,7 @@ export function useSync(): UseSyncReturn {
   const exportBackup = useCallback(async (backupId: string) => {
     setError(null);
     try {
-      const blob = await backupService.exportBackup(backupId);
-      return blob;
+      return await backupService.exportBackup(backupId);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -307,8 +305,7 @@ export function useSync(): UseSyncReturn {
   const importBackup = useCallback(async (file: File) => {
     setError(null);
     try {
-      const backup = await backupService.importBackup(file);
-      return backup;
+      return await backupService.importBackup(file);
     } catch (err: any) {
       setError(err.message);
       throw err;
@@ -339,8 +336,7 @@ export function useSync(): UseSyncReturn {
   const resolveWithMerge = useCallback(async (conflictId: string) => {
     setError(null);
     try {
-      const result = await conflictService.resolveWithMerge(conflictId);
-      return result;
+      return await conflictService.resolveWithMerge(conflictId);
     } catch (err: any) {
       setError(err.message);
       throw err;
