@@ -21,6 +21,10 @@ CONFIG_DIR="$HOME/.config/devops-unity-ide"
 DATA_DIR="$HOME/.local/share/devops-unity-ide"
 LOG_FILE="$HOME/.devops-unity-ide/install.log"
 
+# Create log directory first
+mkdir -p "$(dirname "$LOG_FILE")"
+touch "$LOG_FILE"
+
 # Logging function
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"
