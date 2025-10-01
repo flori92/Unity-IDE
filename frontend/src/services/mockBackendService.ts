@@ -1,89 +1,161 @@
-// Mode démo avec données mock
+// Mode démo ultra-performant - Style K9s
 import type { Container, Pod, Service, SystemInfo, SystemMetrics, CommandResult, LogsResult } from './localBackendService';
 
-// Données mock pour le mode démo
-const mockContainers: Container[] = [
+// Données mock réalistes inspirées de K9s
+const generateMockContainers = (): Container[] => [
   {
-    id: 'abc123',
+    id: 'web-nginx-7f8b9c',
     name: 'web-server',
-    image: 'nginx:latest',
-    status: 'running',
-    state: 'Running',
-    ports: ['80:80', '443:443'],
-    created: '2024-01-15T10:30:00Z',
+    image: 'nginx:1.25-alpine',
+    status: 'Up 2 hours',
+    state: 'running',
+    ports: ['0.0.0.0:80->80/tcp', ':::443->443/tcp'],
+    created: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    labels: { 'app': 'web', 'env': 'prod' }
   },
   {
-    id: 'def456',
+    id: 'api-node-d4e5f6',
     name: 'api-backend',
-    image: 'node:18-alpine',
-    status: 'running',
-    state: 'Running',
-    ports: ['3000:3000'],
-    created: '2024-01-15T10:35:00Z',
+    image: 'node:20-alpine',
+    status: 'Up 2 hours',
+    state: 'running',
+    ports: ['0.0.0.0:3000->3000/tcp'],
+    created: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    labels: { 'app': 'api', 'version': 'v2.1' }
   },
   {
-    id: 'ghi789',
+    id: 'db-postgres-a1b2c3',
+    name: 'postgres-db',
+    image: 'postgres:15-alpine',
+    status: 'Up 2 hours',
+    state: 'running',
+    ports: ['5432/tcp'],
+    created: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    labels: { 'app': 'db', 'db': 'postgres' }
+  },
+  {
+    id: 'cache-redis-x9y8z7',
     name: 'redis-cache',
     image: 'redis:7-alpine',
-    status: 'running',
-    state: 'Running',
-    ports: ['6379:6379'],
-    created: '2024-01-15T10:40:00Z',
-  },
+    status: 'Up 2 hours',
+    state: 'running',
+    ports: ['6379/tcp'],
+    created: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    labels: { 'app': 'cache', 'type': 'redis' }
+  }
 ];
 
-const mockPods: Pod[] = [
+const generateMockPods = (): Pod[] => [
   {
-    name: 'frontend-deployment-5f7b9c8d-x9k2m',
-    namespace: 'default',
+    name: 'frontend-deployment-6b7c8d9e-x9k2m',
+    namespace: 'production',
     status: 'Running',
-    ip: '10.244.0.15',
-    node: 'node-1',
+    ready: '1/1',
+    restarts: 0,
+    age: '2h',
+    ip: '10.244.1.15',
+    node: 'worker-node-1',
+    labels: { 'app': 'frontend', 'version': 'v2.1' }
   },
   {
-    name: 'backend-api-7d8c9f-h4j6k',
-    namespace: 'default',
+    name: 'backend-api-8d9e0f-a1b2c',
+    namespace: 'production',
     status: 'Running',
-    ip: '10.244.0.16',
-    node: 'node-1',
+    ready: '1/1',
+    restarts: 1,
+    age: '2h',
+    ip: '10.244.1.16',
+    node: 'worker-node-1',
+    labels: { 'app': 'backend', 'tier': 'api' }
   },
   {
-    name: 'database-statefulset-0',
-    namespace: 'default',
+    name: 'database-postgres-0',
+    namespace: 'production',
     status: 'Running',
-    ip: '10.244.0.17',
-    node: 'node-2',
+    ready: '1/1',
+    restarts: 0,
+    age: '24h',
+    ip: '10.244.2.10',
+    node: 'worker-node-2',
+    labels: { 'app': 'database', 'db': 'postgres' }
   },
+  {
+    name: 'monitoring-prometheus-5f6g7h',
+    namespace: 'monitoring',
+    status: 'Running',
+    ready: '1/1',
+    restarts: 0,
+    age: '24h',
+    ip: '10.244.3.5',
+    node: 'monitoring-node',
+    labels: { 'app': 'prometheus', 'component': 'server' }
+  },
+  {
+    name: 'ingress-nginx-controller-12345',
+    namespace: 'ingress-nginx',
+    status: 'Running',
+    ready: '1/1',
+    restarts: 2,
+    age: '24h',
+    ip: '10.244.0.100',
+    node: 'ingress-node',
+    labels: { 'app.kubernetes.io/name': 'ingress-nginx' }
+  }
 ];
 
-const mockServices: Service[] = [
+const generateMockServices = (): Service[] => [
   {
     name: 'frontend-service',
-    namespace: 'default',
+    namespace: 'production',
     type: 'LoadBalancer',
-    clusterIP: '10.96.0.10',
-    ports: ['80:30080'],
+    clusterIP: '10.96.1.10',
+    externalIP: '34.102.156.89',
+    ports: ['80:30080/TCP', '443:30443/TCP'],
+    age: '24h',
+    labels: { 'app': 'frontend' }
   },
   {
     name: 'backend-api-service',
-    namespace: 'default',
+    namespace: 'production',
     type: 'ClusterIP',
-    clusterIP: '10.96.0.11',
-    ports: ['3000:3000'],
+    clusterIP: '10.96.1.11',
+    ports: ['3000:3000/TCP'],
+    age: '24h',
+    labels: { 'app': 'backend' }
   },
+  {
+    name: 'database-service',
+    namespace: 'production',
+    type: 'ClusterIP',
+    clusterIP: '10.96.1.12',
+    ports: ['5432:5432/TCP'],
+    age: '24h',
+    labels: { 'app': 'database' }
+  },
+  {
+    name: 'monitoring-service',
+    namespace: 'monitoring',
+    type: 'ClusterIP',
+    clusterIP: '10.96.2.5',
+    ports: ['9090:9090/TCP'],
+    age: '24h',
+    labels: { 'app': 'prometheus' }
+  }
 ];
 
 const mockSystemInfo: SystemInfo = {
-  hostname: 'demo-machine',
-  platform: 'darwin',
-  arch: 'arm64',
-  cpuCores: 8,
-  memoryGB: 16,
+  hostname: 'k8s-cluster-master',
+  platform: 'linux',
+  arch: 'x86_64',
+  cpuCores: 16,
+  memoryGB: 64,
   dockerRunning: true,
   dockerVersion: '24.0.7',
   kubernetesRunning: true,
   k8sConnected: true,
   k8sVersion: 'v1.28.3',
+  uptime: '7 days, 4 hours',
+  loadAverage: [1.25, 1.15, 1.05]
 };
 
 // mockSystemMetrics retiré car non utilisé - les métriques sont générées dynamiquement
@@ -190,15 +262,16 @@ class MockBackendService {
 
   async getContainers(): Promise<Container[]> {
     await this.delay(300);
-    return mockContainers;
+    return generateMockContainers();
   }
 
   async getImages(): Promise<any[]> {
     await this.delay(300);
     return [
-      { id: 'img1', name: 'nginx:latest', size: '142MB' },
-      { id: 'img2', name: 'node:18-alpine', size: '178MB' },
-      { id: 'img3', name: 'redis:7-alpine', size: '32MB' },
+      { id: 'sha256:abc123', repoTags: ['nginx:1.25-alpine'], size: 142 * 1024 * 1024, created: Date.now() - 86400000 },
+      { id: 'sha256:def456', repoTags: ['node:20-alpine'], size: 178 * 1024 * 1024, created: Date.now() - 86400000 },
+      { id: 'sha256:ghi789', repoTags: ['postgres:15-alpine'], size: 245 * 1024 * 1024, created: Date.now() - 86400000 },
+      { id: 'sha256:jkl012', repoTags: ['redis:7-alpine'], size: 32 * 1024 * 1024, created: Date.now() - 86400000 },
     ];
   }
 
@@ -244,12 +317,12 @@ class MockBackendService {
 
   async getPods(_namespace: string = 'default'): Promise<Pod[]> {
     await this.delay(300);
-    return mockPods;
+    return generateMockPods();
   }
 
   async getServices(_namespace: string = 'default'): Promise<Service[]> {
     await this.delay(300);
-    return mockServices;
+    return generateMockServices();
   }
 
   async deletePod(name: string, _namespace: string): Promise<void> {
