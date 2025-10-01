@@ -25,7 +25,7 @@ npm install && npm run dev
 
 Ouvrez http://localhost:5173 🎉
 
-📚 **[Guide Complet →](QUICKSTART.md)** | 🏗️ **[Build Multi-OS →](BUILD-GUIDE.md)** | 🗺️ **[Roadmap →](ROADMAP.md)**
+📚 **[Guide Complet →](QUICKSTART.md)** | 🏗️ **[Build Multi-OS →](BUILD-GUIDE.md)**
 
 ---
 
@@ -190,35 +190,6 @@ Unity-IDE/
 
 ---
 
-## 🗺️ **Roadmap**
-
-### **✅ Version 2.0.0 (Actuelle)**
-- Interface VS Code complète
-- Vues Docker/K8s/Ansible
-- Auto-discovery système
-- Build multi-OS
-
-### **🔄 Version 2.1.0 (En cours)**
-- Connexion APIs backend
-- Actions temps réel
-- Tests unitaires
-
-### **📋 Version 2.2.0 (Prochaine)**
-- Command Palette (Ctrl+Shift+P)
-- Quick Open (Ctrl+P)
-- Raccourcis clavier complets
-
-### **🎯 Versions Futures**
-- Git integration (v2.3.0)
-- Extensions marketplace (v3.0.0)
-- AI Copilot (v3.1.0)
-- Collaboration temps réel (v3.2.0)
-- Cloud sync (v4.0.0)
-
-📖 **[Roadmap Complète →](ROADMAP.md)**
-
----
-
 ## 🤝 **Contribuer**
 
 Nous accueillons les contributions ! 🎉
@@ -251,7 +222,6 @@ git push origin feature/amazing-feature
 |----------|-------------|
 | [QUICKSTART.md](QUICKSTART.md) | Guide de démarrage rapide |
 | [BUILD-GUIDE.md](BUILD-GUIDE.md) | Build multi-OS détaillé |
-| [ROADMAP.md](ROADMAP.md) | Roadmap et versions futures |
 | [VSCODE-ARCHITECTURE.md](VSCODE-ARCHITECTURE.md) | Architecture VS Code |
 | [INTEGRATION-GUIDE.md](INTEGRATION-GUIDE.md) | Intégrer l'interface VS Code |
 | [AUTO-DISCOVERY.md](AUTO-DISCOVERY.md) | Système auto-discovery |
