@@ -31,8 +31,8 @@ import {
   Build,
   Lightbulb,
 } from '@mui/icons-material';
-import { useAI } from '../../hooks/useAI';
-import { AIMessage } from '../../services/ai.service';
+import { useAI } from '../../../hooks/useAI';
+import { AIMessage } from '../../../services/ai.service';
 
 interface MessageBubbleProps {
   message: AIMessage;
@@ -155,8 +155,8 @@ export const AIChatView: React.FC = () => {
     }
   };
 
-  const handleNewConversation = () => {
-    setCurrentConversation(null);
+  const handleNewConversation = async () => {
+    await createConversation('New Chat', context, selectedModel);
   };
 
   const handleDeleteConversation = async (id: string) => {
