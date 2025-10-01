@@ -9,7 +9,6 @@ import {
   SyncSettings,
   SyncStatus,
   Device,
-  SyncItem,
 } from '../services/sync.service';
 import {
   backupService,
@@ -68,7 +67,7 @@ export function useSync(): UseSyncReturn {
   // Sync state
   const [syncSettings, setSyncSettings] = useState<SyncSettings>(syncService.getSettings());
   const [syncStatus, setSyncStatus] = useState<SyncStatus>(syncService.getStatus());
-  const [devices, setDevices] = useState<Device[]>(syncService.getDevices());
+  const [devices] = useState<Device[]>(syncService.getDevices());
 
   // Backup state
   const [backupSettings, setBackupSettings] = useState<BackupSettings>(
