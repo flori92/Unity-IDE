@@ -88,16 +88,10 @@ func (c *Client) readPump() {
 func (c *Client) writePump() {
 	defer c.conn.Close()
 
-	for {
-		select {
-		case message, ok := <-c.send:
-			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
-			}
-			c.conn.WriteMessage(websocket.TextMessage, message)
-		}
+	for message := range c.send {
+		c.conn.WriteMessage(websocket.TextMessage, message)
 	}
+	c.conn.WriteMessage(websocket.CloseMessage, []byte{})
 }
 
 func handleWebSocket(hub *Hub) gin.HandlerFunc {
@@ -193,6 +187,15 @@ func setupRouter(hub *Hub) *gin.Engine {
 			workflows.POST("/create", createWorkflow)
 			workflows.POST("/:id/execute", executeWorkflow)
 			workflows.DELETE("/:id", deleteWorkflow)
+		}
+
+		// AI endpoints
+		ai := v1.Group("/ai")
+		{
+			ai.GET("/models", getAIModels)
+			ai.GET("/conversations", getAIConversations)
+			ai.POST("/conversations", createAIConversation)
+			ai.POST("/conversations/:id/messages", sendAIMessage)
 		}
 	}
 
@@ -658,6 +661,88 @@ func deleteWorkflow(c *gin.Context) {
 	c.JSON(200, gin.H{"message": fmt.Sprintf("Workflow %s deleted", id)})
 }
 
+// AI handlers
+func getAIModels(c *gin.Context) {
+	models := []map[string]interface{}{
+		{
+			"id":          "gpt-4",
+			"name":        "GPT-4",
+			"provider":    "OpenAI",
+			"description": "Most capable GPT-4 model",
+			"available":   true,
+		},
+		{
+			"id":          "gpt-3.5-turbo",
+			"name":        "GPT-3.5 Turbo",
+			"provider":    "OpenAI",
+			"description": "Fast and efficient",
+			"available":   true,
+		},
+		{
+			"id":          "claude-3-opus",
+			"name":        "Claude 3 Opus",
+			"provider":    "Anthropic",
+			"description": "Most capable Claude model",
+			"available":   false,
+		},
+	}
+	c.JSON(200, gin.H{"models": models})
+}
+
+func getAIConversations(c *gin.Context) {
+	conversations := []map[string]interface{}{
+		{
+			"id":         "conv-1",
+			"title":      "Docker Compose Help",
+			"created_at": time.Now().Add(-2 * time.Hour),
+			"updated_at": time.Now().Add(-1 * time.Hour),
+			"messages":   3,
+		},
+		{
+			"id":         "conv-2",
+			"title":      "Kubernetes Deployment",
+			"created_at": time.Now().Add(-24 * time.Hour),
+			"updated_at": time.Now().Add(-12 * time.Hour),
+			"messages":   5,
+		},
+	}
+	c.JSON(200, gin.H{"conversations": conversations})
+}
+
+func createAIConversation(c *gin.Context) {
+	var body map[string]interface{}
+	c.BindJSON(&body)
+	
+	conversation := map[string]interface{}{
+		"id":         fmt.Sprintf("conv-%d", time.Now().Unix()),
+		"title":      body["title"],
+		"created_at": time.Now(),
+		"updated_at": time.Now(),
+		"messages":   0,
+	}
+	
+	c.JSON(200, gin.H{"conversation": conversation})
+}
+
+func sendAIMessage(c *gin.Context) {
+	conversationID := c.Param("id")
+	var body map[string]interface{}
+	c.BindJSON(&body)
+	
+	message := body["message"].(string)
+	logrus.Infof("AI message in conversation %s: %s", conversationID, message)
+	
+	// Mock AI response
+	response := map[string]interface{}{
+		"id":      fmt.Sprintf("msg-%d", time.Now().Unix()),
+		"role":    "assistant",
+		"content": fmt.Sprintf("Je comprends votre question sur '%s'. Voici une suggestion...", message),
+		"created_at": time.Now(),
+	}
+	
+	c.JSON(200, gin.H{"message": response})
+}
+
 func main() {
 	// Initialize logrus
 	logrus.SetLevel(logrus.InfoLevel)
@@ -698,17 +783,14 @@ func main() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
-		for {
-			select {
-			case <-ticker.C:
-				// Broadcast metrics to all connected clients
-				metricsMsg := fmt.Sprintf(`{"type":"metrics","payload":{"cpu":%.1f,"memory":%.1f,"timestamp":"%s"}}`,
-					float64(time.Now().Unix()%100),
-					float64(time.Now().Unix()%80),
-					time.Now().Format(time.RFC3339))
+		for range ticker.C {
+			// Broadcast metrics to all connected clients
+			metricsMsg := fmt.Sprintf(`{"type":"metrics","payload":{"cpu":%.1f,"memory":%.1f,"timestamp":"%s"}}`,
+				float64(time.Now().Unix()%100),
+				float64(time.Now().Unix()%80),
+				time.Now().Format(time.RFC3339))
 
-				hub.broadcast <- []byte(metricsMsg)
-			}
+			hub.broadcast <- []byte(metricsMsg)
 		}
 	}()
 
