@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Box, useTheme } from '@mui/material';
+import { Box } from '@mui/material';
 import ActivityBar from '../components/vscode/ActivityBar';
 import SideBar from '../components/vscode/SideBar';
 import EditorArea from '../components/vscode/EditorArea';
@@ -13,17 +13,18 @@ import PanelArea from '../components/vscode/PanelArea';
 import StatusBar from '../components/vscode/StatusBar';
 import CommandPalette from '../components/vscode/CommandPalette';
 import QuickOpen from '../components/vscode/QuickOpen';
+import AISidePanel from '../components/vscode/AISidePanel';
 
 type ActivityView = 'explorer' | 'search' | 'source-control' | 'docker' | 'kubernetes' | 'ansible' | 'extensions' | 'settings';
 
 export const VSCodeLayout: React.FC = () => {
-  const theme = useTheme();
   const [activeView, setActiveView] = useState<ActivityView>('explorer');
   const [sidebarVisible, setSidebarVisible] = useState(true);
   const [panelVisible, setPanelVisible] = useState(true);
   const [panelHeight, setPanelHeight] = useState(300);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showQuickOpen, setShowQuickOpen] = useState(false);
+  const [aiPanelVisible, setAiPanelVisible] = useState(false);
 
   // Raccourcis clavier globaux
   useEffect(() => {
@@ -57,11 +58,17 @@ export const VSCodeLayout: React.FC = () => {
         e.preventDefault();
         setPanelVisible(!panelVisible);
       }
+      
+      // Ctrl+Shift+A : Toggle AI Panel
+      if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+        e.preventDefault();
+        setAiPanelVisible(!aiPanelVisible);
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [sidebarVisible, panelVisible]);
+  }, [sidebarVisible, panelVisible, aiPanelVisible]);
 
   return (
     <Box
@@ -77,7 +84,7 @@ export const VSCodeLayout: React.FC = () => {
       {/* Activity Bar (Left) - 48px */}
       <ActivityBar
         activeView={activeView}
-        onViewChange={setActiveView}
+        onViewChange={(view) => setActiveView(view as ActivityView)}
         onToggleSidebar={() => setSidebarVisible(!sidebarVisible)}
       />
 
@@ -89,33 +96,52 @@ export const VSCodeLayout: React.FC = () => {
         />
       )}
 
-      {/* Main Content Area */}
+      {/* Main Content Area (avec AI Panel à droite) */}
       <Box
         sx={{
           flex: 1,
           display: 'flex',
-          flexDirection: 'column',
           overflow: 'hidden',
         }}
       >
-        {/* Editor Area */}
-        <EditorArea
-          height={panelVisible ? `calc(100% - ${panelHeight}px - 22px)` : 'calc(100% - 22px)'}
-        />
+        {/* Content principal (Editor + Panel) */}
+        <Box
+          sx={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+        >
+          {/* Editor Area */}
+          <EditorArea
+            height={panelVisible ? `calc(100% - ${panelHeight}px - 22px)` : 'calc(100% - 22px)'}
+          />
 
-        {/* Panel Area (Terminal, Output, Debug Console) */}
-        {panelVisible && (
-          <PanelArea
-            height={panelHeight}
-            onClose={() => setPanelVisible(false)}
+          {/* Panel Area (Terminal, Output, Debug Console) */}
+          {panelVisible && (
+            <PanelArea
+              height={panelHeight}
+              onClose={() => setPanelVisible(false)}
+              onHeightChange={(h) => setPanelHeight(h)}
+            />
+          )}
+
+          {/* Status Bar - 22px */}
+          <StatusBar
+            onTogglePanel={() => setPanelVisible(!panelVisible)}
+            onToggleAIPanel={() => setAiPanelVisible(!aiPanelVisible)}
+          />
+        </Box>
+
+        {/* AI Side Panel (Right) */}
+        {aiPanelVisible && (
+          <AISidePanel
+            width={400}
+            onClose={() => setAiPanelVisible(false)}
           />
         )}
-
-        {/* Status Bar - 22px */}
-      <StatusBar
-        onTogglePanel={() => setPanelVisible(!panelVisible)}
-      />
-    </Box>
+      </Box>
 
     {/* Command Palette (Ctrl+Shift+P) */}
     <CommandPalette

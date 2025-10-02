@@ -4,7 +4,6 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Build](https://img.shields.io/badge/build-passing-brightgreen)](Makefile)
 [![Progress](https://img.shields.io/badge/progress-85%25-success)](PROGRESS-REPORT.md)
-
 > **Interface VS Code + AI Copilot + Collaboration = Unity IDE**  
 > L'IDE DevOps ultime avec Docker, Kubernetes, Ansible, AI et collaboration temps réel
 
@@ -13,9 +12,9 @@
 ## ⚡ **Démarrage Rapide (2 minutes)**
 
 ```bash
-git clone https://github.com/flori92/Unity-IDE.git
+git clone https://github.com/devops-unity/ide.git
 cd Unity-IDE
-./install.sh
+./test-local.sh
 ```
 
 **Ou en mode développement :**

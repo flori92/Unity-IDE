@@ -24,23 +24,33 @@ PROJECT_ROOT="$(cd "$(dirname "$0")" && pwd)"
 echo -e "${BLUE}[1/5] Nettoyage des builds précédents...${NC}"
 rm -rf "$PROJECT_ROOT/frontend/dist"
 rm -rf "$PROJECT_ROOT/frontend/src-tauri/target"
-rm -f "$PROJECT_ROOT/frontend/src-tauri/backend-server"
+rm -f "$PROJECT_ROOT/frontend/src-tauri/backend-server"*
 echo -e "${GREEN}✓ Nettoyage terminé${NC}"
 
 # 2. Compiler le backend Go
 echo -e "${BLUE}[2/5] Compilation du backend Go...${NC}"
 cd "$PROJECT_ROOT/backend"
 
-# Compiler pour macOS (architecture native)
-GOOS=darwin GOARCH=arm64 go build -o "$PROJECT_ROOT/frontend/src-tauri/backend-server" ./cmd/server/simple_main.go
+# Détecter l'architecture
+ARCH=$(uname -m)
+if [ "$ARCH" = "arm64" ]; then
+    TARGET="aarch64-apple-darwin"
+elif [ "$ARCH" = "x86_64" ]; then
+    TARGET="x86_64-apple-darwin"
+else
+    TARGET="universal-apple-darwin"
+fi
 
-if [ ! -f "$PROJECT_ROOT/frontend/src-tauri/backend-server" ]; then
+# Compiler pour macOS avec le nom attendu par Tauri
+GOOS=darwin GOARCH=arm64 go build -o "$PROJECT_ROOT/frontend/src-tauri/backend-server-$TARGET" ./cmd/server/simple_main.go
+
+if [ ! -f "$PROJECT_ROOT/frontend/src-tauri/backend-server-$TARGET" ]; then
     echo -e "${RED}[ERROR] Échec de la compilation du backend${NC}"
     exit 1
 fi
 
-chmod +x "$PROJECT_ROOT/frontend/src-tauri/backend-server"
-echo -e "${GREEN}✓ Backend compilé : $(ls -lh $PROJECT_ROOT/frontend/src-tauri/backend-server | awk '{print $5}')${NC}"
+chmod +x "$PROJECT_ROOT/frontend/src-tauri/backend-server-$TARGET"
+echo -e "${GREEN}✓ Backend compilé : backend-server-$TARGET ($(ls -lh $PROJECT_ROOT/frontend/src-tauri/backend-server-$TARGET | awk '{print $5}'))${NC}"
 
 # 3. Installer les dépendances frontend
 echo -e "${BLUE}[3/5] Installation des dépendances frontend...${NC}"

@@ -10,13 +10,15 @@ import {
   WarningAmber,
   CheckCircleOutline,
   CloudQueue,
+  SmartToy,
 } from '@mui/icons-material';
 
 interface StatusBarProps {
   onTogglePanel: () => void;
+  onToggleAIPanel?: () => void;
 }
 
-export const StatusBar: React.FC<StatusBarProps> = ({ onTogglePanel }) => {
+export const StatusBar: React.FC<StatusBarProps> = ({ onTogglePanel, onToggleAIPanel }) => {
   return (
     <Box
       sx={{
@@ -154,6 +156,32 @@ export const StatusBar: React.FC<StatusBarProps> = ({ onTogglePanel }) => {
             YAML
           </Typography>
         </Box>
+
+        {/* AI Copilot Toggle */}
+        {onToggleAIPanel && (
+          <Box
+            onClick={onToggleAIPanel}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.5,
+              cursor: 'pointer',
+              px: 1,
+              py: 0.3,
+              borderRadius: '3px',
+              bgcolor: 'rgba(255, 255, 255, 0.1)',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.2)',
+              },
+            }}
+            title="Toggle AI Copilot (Ctrl+Shift+A)"
+          >
+            <SmartToy sx={{ fontSize: 14 }} />
+            <Typography variant="caption" sx={{ fontSize: '11px', fontWeight: 600 }}>
+              AI Copilot
+            </Typography>
+          </Box>
+        )}
 
         {/* Status Icon */}
         <Box
