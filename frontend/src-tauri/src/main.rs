@@ -4,6 +4,8 @@
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu, SystemTray, SystemTrayEvent, SystemTrayMenu, SystemTrayMenuItem, Manager};
 use std::sync::Arc;
 use tokio::sync::Mutex;
+use std::process::{Command, Child};
+use std::sync::Mutex as StdMutex;
 
 mod docker;
 mod kubernetes;
@@ -30,6 +32,22 @@ struct AppState {
     ansible: Arc<Mutex<AnsibleManager>>,
     monitoring: Arc<Mutex<MonitoringService>>,
     extensions: Arc<Mutex<ExtensionManager>>,
+    backend_process: Arc<StdMutex<Option<Child>>>,
+}
+
+// Fonction pour lancer le backend Go
+fn start_backend_server(app_handle: tauri::AppHandle) -> Result<Child, Box<dyn std::error::Error>> {
+    let resource_path = app_handle.path_resolver()
+        .resolve_resource("backend-server")
+        .expect("failed to resolve backend-server");
+    
+    println!("Starting backend server from: {:?}", resource_path);
+    
+    let child = Command::new(resource_path)
+        .spawn()?;
+    
+    println!("Backend server started with PID: {}", child.id());
+    Ok(child)
 }
 
 // Tauri commands
@@ -173,6 +191,7 @@ fn main() {
         ansible: Arc::new(Mutex::new(AnsibleManager::new())),
         monitoring: Arc::new(Mutex::new(MonitoringService::new())),
         extensions: Arc::new(Mutex::new(ExtensionManager::new())),
+        backend_process: Arc::new(StdMutex::new(None)),
     };
 
     tauri::Builder::default()
@@ -217,13 +236,32 @@ fn main() {
         .setup(|app| {
             let window = app.get_window("main").unwrap();
             
+            // Démarrer le backend Go
+            let app_handle = app.handle();
+            let state = app.state::<AppState>();
+            
+            println!("Starting backend server...");
+            match start_backend_server(app_handle.clone()) {
+                Ok(child) => {
+                    let mut backend_process = state.backend_process.lock().unwrap();
+                    *backend_process = Some(child);
+                    println!("Backend server started successfully");
+                }
+                Err(e) => {
+                    println!("Warning: Failed to start backend server: {}", e);
+                    println!("The app will continue with Rust-based services");
+                }
+            }
+            
+            // Attendre que le backend soit prêt
+            std::thread::sleep(std::time::Duration::from_secs(2));
+            
             // Emit initial setup event
             window.emit("app_ready", Payload {
                 message: "DevOps Unity IDE is ready".to_string(),
             })?;
 
             // Start monitoring service in background
-            let app_handle = app.handle();
             tauri::async_runtime::spawn(async move {
                 loop {
                     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
